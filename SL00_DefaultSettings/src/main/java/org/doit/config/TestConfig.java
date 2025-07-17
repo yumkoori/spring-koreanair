@@ -1,4 +1,4 @@
-package org.doit.ik.config;
+package org.doit.config;
 
 public class TestConfig {
 

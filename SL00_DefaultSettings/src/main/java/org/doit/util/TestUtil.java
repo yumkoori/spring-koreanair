@@ -1,4 +1,4 @@
-package org.doit.ik.util;
+package org.doit.util;
 
 public class TestUtil {
 

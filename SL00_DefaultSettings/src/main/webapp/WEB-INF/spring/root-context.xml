@@ -8,7 +8,7 @@
                            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
 
     <!-- Component Scan -->
-    <context:component-scan base-package="org.doit.ik" />
+    <context:component-scan base-package="org.doit" />
 
     <!-- MariaDB Connection 설정 -->
     <bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
@@ -25,11 +25,11 @@
     <!-- MyBatis SqlSessionFactory -->
     <bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
         <property name="dataSource" ref="dataSource" />
-        <property name="configLocation" value="classpath:org/doit/ik/mapper/mybatis-config.xml" />
+        <property name="configLocation" value="classpath:org/doit/config/mybatis-config.xml" />
     </bean>
 
     <!-- MyBatis Mapper Scan -->
-    <mybatis-spring:scan base-package="org.doit.ik.mapper" />
+    <mybatis-spring:scan base-package="org.doit.admin.mapper, org.doit.payment.mapper, org.doit.reservation.mapper, org.doit.member.mapper" />
 
     <!-- 트랜잭션 매니저 -->
     <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
