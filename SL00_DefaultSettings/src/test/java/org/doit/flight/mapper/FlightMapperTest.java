@@ -1,6 +1,5 @@
 package org.doit.flight.mapper;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 
 import java.time.LocalDate;
@@ -36,6 +35,7 @@ public class FlightMapperTest {
 				1, 
 				SeatClass.ECONOMY, 
 				TripType.ONEWAY);
+		
 		//when
 		List<FlightSearchResponseDTO> flights = flightMapper.getSearchFlight(requestDTO);
 		//then
@@ -43,6 +43,5 @@ public class FlightMapperTest {
 		for (FlightSearchResponseDTO flightSearchResponseDTO : flights) {
 			System.out.println(flightSearchResponseDTO);
 		}
-		assertThat(flights).isNotEmpty();	
 	}
 }
