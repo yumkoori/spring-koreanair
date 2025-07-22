@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="
+                 http://www.springframework.org/schema/security 
+                 http://www.springframework.org/schema/security/spring-security.xsd
+                 http://www.springframework.org/schema/beans 
+                 http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- HTTP Security Configuration -->
+    <http auto-config="true" use-expressions="true">
+        <!-- Ajax endpoints - must come first -->
+        <intercept-url pattern="/checkUserId" access="permitAll"/>
+        <intercept-url pattern="/checkEmail" access="permitAll"/>
+        
+        <!-- Static resources -->
+        <intercept-url pattern="/css/**" access="permitAll"/>
+        <intercept-url pattern="/js/**" access="permitAll"/>
+        <intercept-url pattern="/images/**" access="permitAll"/>
+        <intercept-url pattern="/resources/**" access="permitAll"/>
+        <intercept-url pattern="/**/*.css" access="permitAll"/>
+        <intercept-url pattern="/**/*.js" access="permitAll"/>
+        <intercept-url pattern="/**/*.png" access="permitAll"/>
+        <intercept-url pattern="/**/*.jpg" access="permitAll"/>
+        <intercept-url pattern="/**/*.gif" access="permitAll"/>
+        
+        <!-- Public pages -->
+        <intercept-url pattern="/login" access="permitAll"/>
+        <intercept-url pattern="/register" access="permitAll"/>
+        <intercept-url pattern="/kakao/**" access="permitAll"/>
+        <intercept-url pattern="/" access="permitAll"/>
+        <intercept-url pattern="/index.jsp" access="permitAll"/>
+        
+        <!-- Admin pages -->
+        <intercept-url pattern="/admin/**" access="hasRole('ADMIN')"/>
+        
+        <!-- All other pages require authentication -->
+        <intercept-url pattern="/**" access="isAuthenticated()"/>
+        
+        <!-- Form Login Configuration -->
+        <form-login 
+            login-page="/login"
+            login-processing-url="/login"
+            default-target-url="/dashboard"
+            authentication-failure-url="/login?error=true"
+            username-parameter="userId"
+            password-parameter="password"
+            authentication-success-handler-ref="customAuthenticationSuccessHandler"
+            authentication-failure-handler-ref="customAuthenticationFailureHandler"/>
+        
+        <!-- Logout Configuration -->
+        <logout 
+            logout-url="/logout"
+            logout-success-url="/login?logout=true"
+            invalidate-session="true"
+            delete-cookies="JSESSIONID"/>
+        
+        <!-- CSRF Protection -->
+        <csrf disabled="true"/>
+        
+        <!-- Session Management -->
+        <session-management>
+            <concurrency-control max-sessions="1" expired-url="/login?expired=true"/>
+        </session-management>
+    </http>
+
+    <!-- Authentication Manager -->
+    <authentication-manager>
+        <authentication-provider ref="customAuthenticationProvider"/>
+    </authentication-manager>
+
+    <!-- Custom Authentication Provider -->
+    <beans:bean id="customAuthenticationProvider" class="org.doit.member.security.CustomAuthenticationProvider"/>
+
+    <!-- Custom Authentication Handlers -->
+    <beans:bean id="customAuthenticationSuccessHandler" class="org.doit.member.security.CustomAuthenticationSuccessHandler"/>
+    <beans:bean id="customAuthenticationFailureHandler" class="org.doit.member.security.CustomAuthenticationFailureHandler"/>
+
+    <!-- Password Encoder -->
+    <beans:bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+
+</beans:beans>

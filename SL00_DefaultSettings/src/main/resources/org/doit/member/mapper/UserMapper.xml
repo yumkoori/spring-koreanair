@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.member.dao.UserDAO">
+
+    <!-- Result Map -->
+    <resultMap id="userResultMap" type="User">
+        <id property="userNo" column="user_no"/>
+        <result property="userId" column="user_id"/>
+        <result property="password" column="password"/>
+        <result property="koreanName" column="korean_name"/>
+        <result property="englishName" column="english_name"/>
+        <result property="birthDate" column="birth_date"/>
+        <result property="gender" column="gender"/>
+        <result property="email" column="email"/>
+        <result property="phone" column="phone"/>
+        <result property="address" column="address"/>
+        <result property="regDate" column="reg_date"/>
+        <result property="grade" column="grade"/>
+        <result property="status" column="status"/>
+        <result property="kakaoId" column="kakao_id"/>
+        <result property="loginType" column="login_type"/>
+        <result property="profileImage" column="profile_image"/>
+    </resultMap>
+
+    <!-- Select User by ID -->
+    <select id="findByUserId" parameterType="String" resultMap="userResultMap">
+        SELECT * FROM users WHERE user_id = #{userId}
+    </select>
+
+    <!-- Select User by Kakao ID -->
+    <select id="findByKakaoId" parameterType="String" resultMap="userResultMap">
+        SELECT * FROM users WHERE kakao_id = #{kakaoId}
+    </select>
+
+    <!-- Select User by Email -->
+    <select id="findByEmail" parameterType="String" resultMap="userResultMap">
+        SELECT * FROM users WHERE email = #{email}
+    </select>
+
+    <!-- Select User by User Number -->
+    <select id="findByUserNo" parameterType="int" resultMap="userResultMap">
+        SELECT * FROM users WHERE user_no = #{userNo}
+    </select>
+
+    <!-- Check if User ID exists -->
+    <select id="existsByUserId" parameterType="String" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM users WHERE user_id = #{userId}
+    </select>
+
+    <!-- Check if Email exists -->
+    <select id="existsByEmail" parameterType="String" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM users WHERE email = #{email}
+    </select>
+
+    <!-- Check if Kakao ID exists -->
+    <select id="existsByKakaoId" parameterType="String" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM users WHERE kakao_id = #{kakaoId}
+    </select>
+
+    <!-- Insert User -->
+    <insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyProperty="userNo">
+        INSERT INTO users (
+            user_id, password, korean_name, english_name, birth_date,
+            gender, email, phone, address, grade, status, 
+            kakao_id, login_type, profile_image
+        ) VALUES (
+            #{userId}, #{password}, #{koreanName}, #{englishName}, #{birthDate},
+            #{gender}, #{email}, #{phone}, #{address}, #{grade}, #{status},
+            #{kakaoId}, #{loginType}, #{profileImage}
+        )
+    </insert>
+
+    <!-- Update User -->
+    <update id="updateUser" parameterType="User">
+        UPDATE users SET
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="password != null">password = #{password},</if>
+            korean_name = #{koreanName},
+            english_name = #{englishName},
+            birth_date = #{birthDate},
+            gender = #{gender},
+            email = #{email},
+            phone = #{phone},
+            address = #{address},
+            grade = #{grade},
+            status = #{status},
+            <if test="kakaoId != null">kakao_id = #{kakaoId},</if>
+            <if test="loginType != null">login_type = #{loginType},</if>
+            profile_image = #{profileImage}
+        WHERE user_no = #{userNo}
+    </update>
+
+    <!-- Update Password -->
+    <update id="updatePassword" parameterType="map">
+        UPDATE users SET password = #{password} WHERE user_no = #{userNo}
+    </update>
+
+    <!-- Link Kakao Account -->
+    <update id="linkKakaoAccount" parameterType="map">
+        UPDATE users SET 
+            kakao_id = #{kakaoId},
+            login_type = 'both'
+        WHERE user_no = #{userNo}
+    </update>
+
+    <!-- Update Profile Image -->
+    <update id="updateProfileImage" parameterType="map">
+        UPDATE users SET profile_image = #{profileImage} WHERE user_no = #{userNo}
+    </update>
+
+    <!-- Delete User -->
+    <delete id="deleteUser" parameterType="int">
+        DELETE FROM users WHERE user_no = #{userNo}
+    </delete>
+
+    <!-- Get All Users (for admin) -->
+    <select id="findAllUsers" resultMap="userResultMap">
+        SELECT * FROM users ORDER BY reg_date DESC
+    </select>
+
+    <!-- Search Users -->
+    <select id="searchUsers" parameterType="map" resultMap="userResultMap">
+        SELECT * FROM users 
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (
+                user_id LIKE CONCAT('%', #{keyword}, '%') OR
+                korean_name LIKE CONCAT('%', #{keyword}, '%') OR
+                english_name LIKE CONCAT('%', #{keyword}, '%') OR
+                email LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        <if test="loginType != null and loginType != ''">
+            AND login_type = #{loginType}
+        </if>
+        ORDER BY reg_date DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- Count Users for pagination -->
+    <select id="countUsers" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM users 
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (
+                user_id LIKE CONCAT('%', #{keyword}, '%') OR
+                korean_name LIKE CONCAT('%', #{keyword}, '%') OR
+                english_name LIKE CONCAT('%', #{keyword}, '%') OR
+                email LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        <if test="loginType != null and loginType != ''">
+            AND login_type = #{loginType}
+        </if>
+    </select>
+
+</mapper>

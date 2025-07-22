@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="com.koreanair.model.dto.User" %>
+<%@ page import="org.doit.member.model.User" %>
+<%@ page import="org.doit.member.util.KakaoConfig" %>
 <header class="airline-header">
     <div class="airline-header-top">
         <div class="airline-container">
@@ -21,21 +22,35 @@
                 </div>
                 <%
                     // 세션에서 사용자 정보 확인
-                   Object user = (User) session.getAttribute("user");
+                    User user = (User) session.getAttribute("user");
                     if (user != null) {
                 %>
                     <span class="airline-top-link airline-user-info">
                         <i class="fas fa-user"></i>
                         <%= user.getKoreanName() %>님
                     </span>
-                    <a href="logout.do" class="airline-top-link">
-                        <i class="fas fa-sign-out-alt"></i>
-                        로그아웃
-                    </a>
-                <%
+                    <% 
+                        // 카카오 사용자인 경우 카카오 로그아웃 URL 사용
+                        if (user.getLoginType() != null && 
+                            ("kakao".equals(user.getLoginType()) || "both".equals(user.getLoginType()))) {
+                            String kakaoLogoutUrl = KakaoConfig.getKakaoBrowserLogoutUrl(request);
+                    %>
+                        <a href="<%= kakaoLogoutUrl %>" class="airline-top-link">
+                            <i class="fas fa-sign-out-alt"></i>
+                            로그아웃
+                        </a>
+                    <%
+                        } else {
+                    %>
+                        <a href="${pageContext.request.contextPath}/logout" class="airline-top-link">
+                            <i class="fas fa-sign-out-alt"></i>
+                            로그아웃
+                        </a>
+                    <%
+                        }
                     } else {
                 %>
-                    <a href="registerForm.do" class="airline-top-link">
+                    <a href="${pageContext.request.contextPath}/register" class="airline-top-link">
                         <i class="fas fa-user-plus"></i>
                         회원가입
                     </a>
@@ -48,7 +63,7 @@
     <div class="airline-header-main">
         <div class="airline-container">
             <div class="airline-logo">
-                <a href="index.jsp" style="text-decoration: none; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                <a href="${pageContext.request.contextPath}/" style="text-decoration: none; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                     <svg width="180" height="45" viewBox="0 0 180 45">
                         <!-- 대한항공 로고 -->
                         <g>
@@ -192,11 +207,11 @@
                 <%
                     if (user != null) {
                 %>
-                    <a href="dashboard.do" class="airline-login-btn">마이페이지</a>
+                    <a href="${pageContext.request.contextPath}/dashboard" class="airline-login-btn">마이페이지</a>
                 <%
                     } else {
                 %>
-                    <a href="loginForm.do" class="airline-login-btn" >로그인</a>
+                    <a href="${pageContext.request.contextPath}/login" class="airline-login-btn" >로그인</a>
                 <%
                     }
                 %>
