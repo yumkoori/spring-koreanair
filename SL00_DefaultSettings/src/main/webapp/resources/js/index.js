@@ -1411,9 +1411,8 @@ document.addEventListener('DOMContentLoaded', function() {
 document.querySelector('#departure-search').addEventListener('input', function () {
     const keyword = this.value.trim();
     if (keyword.length === 0) return;
-
-    fetch(`${window.contextPath}/autocomplete.do?keyword=${encodeURIComponent(keyword)}`)
-        .then(response => response.json())
+	fetch(`${window.contextPath}/api/airport?keyword=${encodeURIComponent(keyword)}`)
+	    .then(response => response.json())
         .then(data => {
             const resultsContainer = document.getElementById('departure-results');
             resultsContainer.innerHTML = '';

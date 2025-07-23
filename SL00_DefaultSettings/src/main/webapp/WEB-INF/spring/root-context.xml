@@ -29,7 +29,7 @@
     </bean>
 
     <!-- MyBatis Mapper Scan -->
-    <mybatis-spring:scan base-package="org.doit.ik.mapper, org.doit.admin.mapper, org.doit.payment.mapper, org.doit.reservation.mapper, org.doit.member.mapper" />
+    <mybatis-spring:scan base-package="org.doit.ik.mapper, org.doit.admin.mapper, org.doit.payment.mapper, org.doit.reservation.mapper, org.doit.member.mapper, org.doit.airport.mapper" />
 
     <!-- 트랜잭션 매니저 -->
     <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">

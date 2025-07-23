@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.airport.mapper.AirportMapper">
+
+    <select id="findAirportsByKeyword" parameterType="string" resultType="org.doit.airport.domain.Airport">
+        SELECT *
+        FROM airport
+        WHERE airport_name LIKE CONCAT('%', #{keyword}, '%')
+           OR airport_id LIKE CONCAT('%', #{keyword}, '%')
+    </select>
+  
+
+</mapper>  
