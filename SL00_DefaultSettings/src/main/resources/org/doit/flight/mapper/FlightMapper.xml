@@ -28,4 +28,37 @@
         f.departure_time ASC
   </select>
   
+<select id="getWeekLowPrices" resultType="map">
+  WITH RECURSIVE date_range AS (
+    SELECT DATE(#{departureDate}) - INTERVAL 3 DAY AS target_date
+    UNION ALL
+    SELECT target_date + INTERVAL 1 DAY
+    FROM date_range
+    WHERE target_date + INTERVAL 1 DAY &lt;= DATE(#{departureDate}) + INTERVAL 3 DAY
+  ),
+  ranked_prices AS (
+    SELECT 
+      DATE(f.departure_time) AS flight_date,
+      sp.price,
+      ROW_NUMBER() OVER (PARTITION BY DATE(f.departure_time) ORDER BY sp.price ASC) AS rn
+    FROM flight f
+    JOIN flight_seat fs ON f.flight_id = fs.flight_id
+    JOIN seat_price sp ON fs.flight_id = sp.flight_id AND fs.class_id = sp.class_id
+    WHERE 
+      f.departure_airport_id = #{departure}
+      AND f.arrival_airport_id = #{arrival}
+      AND fs.status = 'AVAILABLE'
+  )
+  SELECT 
+    DATE_FORMAT(d.target_date, '%Y-%m-%d') AS target_date,
+    rp.price AS price
+  FROM date_range d
+  LEFT JOIN ranked_prices rp
+    ON d.target_date = rp.flight_date AND rp.rn = 1
+  ORDER BY d.target_date
+</select>
+
+
+
+  
 </mapper>  

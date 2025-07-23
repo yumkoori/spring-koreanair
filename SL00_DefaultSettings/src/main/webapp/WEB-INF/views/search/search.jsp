@@ -721,10 +721,6 @@
 		String passengersParamForJS = request.getParameter("passengers");
 		String displayPassengersForJS = "성인 2명"; // 기본값
 		
-		// 디버깅: 원본 파라미터 출력
-		System.out.println("=== JSP 디버깅 ===");
-		System.out.println("원본 passengers 파라미터: " + passengersParamForJS);
-		System.out.println("URL 쿼리 스트링: " + request.getQueryString());
 		
 		if (passengersParamForJS != null && !passengersParamForJS.isEmpty()) {
 			displayPassengersForJS = passengersParamForJS.replaceAll("\\s+", " ").trim();

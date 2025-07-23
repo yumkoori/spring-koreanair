@@ -55,6 +55,7 @@ public class FlightSearchViewController {
 	    
 	    System.out.println(requestDTO);
 		
+	    //서비스로 옮기기 
 	    try {
 	    	//항공편 리스트 가져오기 
 			List<FlightSearchResponseDTO> flights = flightSearchService.searchFlight(requestDTO);
@@ -70,6 +71,13 @@ public class FlightSearchViewController {
 			}
 			
 			model.addAttribute("flightSeat", seatsKeyFlightIdMap);
+			
+			//주간 최저가 리스트 가져오기
+			Map<String, Integer> lowPriceList = flightSearchService.getLowPriceList(departureDate, command.getDeparture(), command.getArrival());
+			
+			model.addAttribute("weekLowPrices", lowPriceList);
+		
+			System.out.println(lowPriceList);
 			
 		} catch (Exception e) {
 			e.printStackTrace();

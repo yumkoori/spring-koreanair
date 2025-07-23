@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.doit.flight.dto.FlightSearchRequestDTO;
 import org.doit.flight.dto.FlightSearchResponseDTO;
@@ -43,5 +44,20 @@ public class FlightMapperTest {
 		for (FlightSearchResponseDTO flightSearchResponseDTO : flights) {
 			System.out.println(flightSearchResponseDTO);
 		}
+	}
+	
+	
+	@Test
+	public void getWeekLowPricesTest() {
+		//given
+		LocalDate departureDate = LocalDate.of(2025, 6, 10);
+		String departure = "ICN";
+		String arrival = "PUS";
+		//when
+		Map<String, Integer> weekprice = flightMapper.getWeekLowPrices(departureDate, departure, arrival);
+		//then
+		
+		System.out.println(weekprice);
+		
 	}
 }
