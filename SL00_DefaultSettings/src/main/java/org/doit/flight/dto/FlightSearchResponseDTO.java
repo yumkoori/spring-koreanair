@@ -18,5 +18,5 @@ public class FlightSearchResponseDTO {
     private Timestamp arrivalTime;   
     private Long durationMinutes;         
     private Long availableSeatCount;
-    
+ 
 }

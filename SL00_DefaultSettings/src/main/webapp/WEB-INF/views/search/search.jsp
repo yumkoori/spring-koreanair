@@ -408,7 +408,7 @@
 							<div class="flight-times">
 								<div class="departure-block">
 									<div class="departure-time">
-										${flight.departureTimeFormatted}
+										${flight.departureTime}
 									</div>
 									<div class="departure-code">${param.departure}</div>
 								</div>
@@ -417,7 +417,7 @@
 									<div class="duration-text">
 										<c:choose>
 											<c:when test="${flight.durationMinutes > 0}">
-												${flight.durationFormatted}
+												${flight.durationMinutes}
 											</c:when>
 											<c:otherwise>
 												소요시간 미정
@@ -432,7 +432,7 @@
 
 								<div class="arrival-block">
 									<div class="arrival-time">
-										${flight.arrivalTimeFormatted}
+										${flight.arrivalTime}
 									</div>
 									<div class="arrival-code">${param.arrival}</div>
 								</div>
@@ -449,7 +449,7 @@
 						<c:set var="firstSeats" value="0" />
 
 						<!-- 좌석 리스트 탐색 -->
-						<c:forEach var="seat" items="${flightSeat[flight]}">
+						<c:forEach var="seat" items="${flightSeat[flight.flightId]}">
 							<c:if test="${seat.className == '일반석'}">
 								<c:set var="economySeats" value="${seat.availableSeatCount}" />
 							</c:if>
@@ -467,7 +467,7 @@
 							<div class="fare-column economy clickable-fare" data-fare-type="일반석" data-flight-id="${flight.flightId}">
 								<div class="fare-type">일반석</div>
 								<c:set var="economyFound" value="false" />
-								<c:forEach var="seat" items="${flightSeat[flight]}">
+								<c:forEach var="seat" items="${flightSeat[flight.flightId]}">
 									<c:if test="${seat.className == '일반석'}">
 										<c:set var="economyFound" value="true" />
 										<c:choose>
@@ -495,7 +495,7 @@
 							<div class="fare-column prestige clickable-fare" data-fare-type="프레스티지석" data-flight-id="${flight.flightId}">
 								<div class="fare-type">프레스티지석</div>
 								<c:set var="prestigeFound" value="false" />
-								<c:forEach var="seat" items="${flightSeat[flight]}">
+								<c:forEach var="seat" items="${flightSeat[flight.flightId]}">
 									<c:if test="${seat.className == '프레스티지석'}">
 										<c:set var="prestigeFound" value="true" />
 										<c:choose>
@@ -524,7 +524,7 @@
 							<div class="fare-column first clickable-fare" data-fare-type="일등석" data-flight-id="${flight.flightId}">
 								<div class="fare-type">일등석</div>
 								<c:set var="firstFound" value="false" />
-								<c:forEach var="seat" items="${flightSeat[flight]}">
+								<c:forEach var="seat" items="${flightSeat[flight.flightId]}">
 									<c:if test="${seat.className == '일등석'}">
 										<c:set var="firstFound" value="true" />
 										<c:choose>

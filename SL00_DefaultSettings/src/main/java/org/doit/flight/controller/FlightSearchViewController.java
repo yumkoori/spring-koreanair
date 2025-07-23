@@ -1,12 +1,16 @@
 package org.doit.flight.controller;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.doit.flight.command.FlightSearchCommand;
 import org.doit.flight.dto.FlightSearchRequestDTO;
 import org.doit.flight.dto.FlightSearchResponseDTO;
+import org.doit.flight.dto.FlightSeatResponseDTO;
 import org.doit.flight.service.FlightSearchService;
+import org.doit.flight.service.FlightSeatService;
 import org.doit.util.SeatClass;
 import org.doit.util.TripType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,12 +26,11 @@ public class FlightSearchViewController {
 	@Autowired
 	private FlightSearchService flightSearchService;
 	
+	@Autowired
+	private FlightSeatService flightSeatService;
+	
 	@GetMapping("/search/flight")
-	public String getSearchResultView(FlightSearchCommand command, Model model) {
-		
-		System.out.println("FlightSearchViewController 호출됨!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-		
-	    System.out.println("[DEBUG] flightSearchService: " + flightSearchService);
+	public String getSearchResultView(FlightSearchCommand command, Model model) {		
 
 	    // 문자열 → LocalDate
 	    LocalDate departureDate = LocalDate.parse(command.getDepartureDate());
@@ -49,17 +52,28 @@ public class FlightSearchViewController {
 	            .seatClass(seatClass)
 	            .tripType(tripType)
 	            .build();
+	    
+	    System.out.println(requestDTO);
 		
 	    try {
+	    	//항공편 리스트 가져오기 
 			List<FlightSearchResponseDTO> flights = flightSearchService.searchFlight(requestDTO);
 			
-			model.addAttribute("flights", flights);
+			model.addAttribute("flightList", flights);
+			//항공편id에 해당하는 좌석 정보 가져오기 
+			Map<String, List<FlightSeatResponseDTO>> seatsKeyFlightIdMap = new HashMap<>();
+			
+			for (FlightSearchResponseDTO flightSearchResponseDTO : flights) {
+				String flightId = flightSearchResponseDTO.getFlightId();		//버퍼로 바꿀것 
+				
+				seatsKeyFlightIdMap.put(flightId, flightSeatService.getFlightSeatsByFlightIdAndPassengers(flightId, passengerCount));
+			}
+			
+			model.addAttribute("flightSeat", seatsKeyFlightIdMap);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-
 		
 		return "search/search";
 	}
