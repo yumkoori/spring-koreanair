@@ -104,7 +104,7 @@
 							// 2025-07-15 형식을 2025.07.15 형식으로 변환
 							String formattedDepartureDate = departureDateDisplay.replace("-", ".");
 							String formattedReturnDate = returnDateDisplay.replace("-", ".");
-							dateRangeDisplay = formattedDepartureDate + " ! " + formattedReturnDate;
+							dateRangeDisplay = formattedDepartureDate + " ~ " + formattedReturnDate;
 						}
 					%>
 					<i class="far fa-calendar-alt"></i> <span><%= dateRangeDisplay %></span>
@@ -189,9 +189,8 @@
 						</div>
 					</div>
 				</div>
-				<div class="divider">|</div>
+				
 				<div class="seat-type">
-					<span>${param.seatType != null ? param.seatType : '일반석'}</span>
 					<div class="seat-type-dropdown">
 						<h4>좌석 등급 선택</h4>
 						<div class="seat-options">

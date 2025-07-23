@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     leg: 'return' // 복항편임을 표시
                 });
                 
-                const newUrl = 'flightSearch.do?' + newSearchParams.toString();
+                const newUrl = '/api/search/flight?' + newSearchParams.toString();
                 console.log('복항편 검색 URL:', newUrl);
                 
                                  // 새로운 검색 페이지로 이동
