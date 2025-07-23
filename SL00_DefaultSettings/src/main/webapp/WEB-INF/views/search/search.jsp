@@ -401,8 +401,8 @@
 			</div>
 
 			<div class="flights-list">
-				<c:forEach var="flight" items="${flightList}">
-					<div class="flight-card new-layout">
+				<c:forEach var="flight" items="${flightList}" varStatus="status">
+					<div class="flight-card new-layout" data-flight-index="${status.index}">
 						<!-- flight 기본 정보 -->
 						<div class="flight-info-column">
 							<div class="flight-times">
@@ -833,6 +833,24 @@
 			// 1초 후에도 한 번 더 실행 (동적 콘텐츠 대비)
 			setTimeout(removeUnwantedMessages, 1000);
 		});
+		
+		// ✈️ JSP에서 JavaScript로 항공편 데이터 전달
+		window.flightListData = [
+			<c:forEach var="flight" items="${flightList}" varStatus="status">
+			{
+				flightId: '${flight.flightId}',
+				flightNo: '${flight.flightNo}',
+				departureTime: '${flight.departureTimeFormatted}',
+				arrivalTime: '${flight.arrivalTimeFormatted}',
+				departureCode: '${param.departure}',
+				arrivalCode: '${param.arrival}',
+				duration: '${flight.durationFormatted}',
+				durationMinutes: ${flight.durationMinutes}
+			}<c:if test="${!status.last}">,</c:if>
+			</c:forEach>
+		];
+		
+		console.log('✈️ JSP에서 전달받은 항공편 데이터:', window.flightListData);
 	</script>
 	<script src="${pageContext.request.contextPath}/resources/js/search/search.js"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/search/seat-selection.js"></script>

@@ -1,3 +1,7 @@
+console.log('🔥🔥🔥 search.js 파일이 로드되었습니다! 🔥🔥🔥');
+console.log('⏰ 현재 시간:', new Date().toLocaleString());
+console.log('🌐 페이지 URL:', window.location.href);
+
 // 승객 수 정보 추출 함수 (전역)
 function getPassengerCount() {
     console.log('=== 승객 수 추출 시작 ===');
@@ -166,7 +170,9 @@ window.debugUrlParams = function() {
 document.addEventListener('DOMContentLoaded', function() {
     // 현재 페이지 URL 경로 확인
     const currentPath = window.location.pathname;
-    const isSearchResults = currentPath.includes('search-results.html') || currentPath.includes('flightSearch.do');
+    console.log('🌐 현재 페이지 경로:', currentPath);
+    const isSearchResults = currentPath.includes('search-results.html') || currentPath.includes('flightSearch.do') || currentPath.includes('/search/flight');
+    console.log('✈️ 항공편 검색 페이지 여부:', isSearchResults);
     
     // 페이지 로드 시 승객 수 확인
     console.log('🔍 페이지 로드 시 승객 수 확인');
@@ -176,11 +182,405 @@ document.addEventListener('DOMContentLoaded', function() {
     // 모든 페이지에서 공통적으로 사용되는 코드
     initializeCommonFunctionality();
     
+    // 🎯 상세보기 버튼을 위한 강제 초기화 (페이지 감지와 무관하게)
+    console.log('🚀 강제로 상세보기 버튼 이벤트 설정 시작!');
+    setupGlobalDetailButtonEvents();
+    
     // 페이지별 초기화
     if (isSearchResults) {
+        console.log('🛫 항공편 검색 결과 페이지 초기화 시작!');
         initializeSearchResultsPage();
     } else {
-        initializeHomePage();
+        console.log('🏠 홈페이지로 인식됨');
+        // initializeHomePage(); // 주석 처리 - 현재 페이지에서 필요없음
+    }
+    
+    // 🎯 전역 상세보기 버튼 이벤트 설정 함수
+    function setupGlobalDetailButtonEvents() {
+        console.log('🔧 전역 상세보기 버튼 이벤트 설정 중...');
+        
+        // 모든 클릭을 감지하는 전역 이벤트 리스너
+        document.addEventListener('click', function(e) {
+            console.log('👆 전역 클릭 감지:', e.target.tagName, e.target.className, e.target.textContent?.substring(0, 20));
+            
+            // 상세보기 버튼 클릭 감지
+            if (e.target && (
+                (e.target.classList && e.target.classList.contains('details-btn')) ||
+                (e.target.textContent && e.target.textContent.includes('상세 보기'))
+            )) {
+                console.log('🎉🎉🎉 상세보기 버튼 클릭 감지! 🎉🎉🎉');
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // 클릭된 버튼에서 항공편 데이터 추출
+                const flightData = extractFlightDataFromCard(e.target);
+                
+                // 모달 팝업 표시 (데이터와 함께)
+                showGlobalFlightDetailsModal(flightData);
+            }
+        });
+        
+        // 상세보기 버튼 직접 검색 및 이벤트 설정
+        function findAndSetupDetailButtons() {
+            const detailButtons = document.querySelectorAll('.details-btn, button:contains("상세 보기")');
+            console.log('🔍 찾은 상세보기 버튼 개수:', detailButtons.length);
+            
+            detailButtons.forEach((btn, index) => {
+                if (!btn.hasAttribute('data-global-event-attached')) {
+                    console.log(`✅ 전역 버튼 ${index + 1}에 이벤트 리스너 설정`);
+                    
+                    btn.addEventListener('click', function(e) {
+                        console.log('🎉 직접 설정된 상세보기 버튼 클릭!');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // 버튼에서 항공편 데이터 추출
+                        const flightData = extractFlightDataFromCard(this);
+                        showGlobalFlightDetailsModal(flightData);
+                    });
+                    
+                    btn.setAttribute('data-global-event-attached', 'true');
+                }
+            });
+        }
+        
+        // 즉시 실행
+        findAndSetupDetailButtons();
+        
+        // 1초, 3초, 5초 후에도 재실행
+        setTimeout(findAndSetupDetailButtons, 1000);
+        setTimeout(findAndSetupDetailButtons, 3000);
+        setTimeout(findAndSetupDetailButtons, 5000);
+        
+        console.log('✅ 전역 상세보기 버튼 이벤트 설정 완료');
+    }
+    
+    // 항공편 카드에서 실제 JSP 데이터 추출하는 함수
+    function extractFlightDataFromCard(clickedElement) {
+        console.log('📊 JSP 항공편 데이터 추출 시작');
+        
+        // 클릭된 요소에서 가장 가까운 flight-card 찾기
+        const flightCard = clickedElement.closest('.flight-card');
+        
+        if (!flightCard) {
+            console.error('❌ 항공편 카드를 찾을 수 없습니다');
+            return null;
+        }
+        
+        console.log('✅ 항공편 카드 찾음:', flightCard);
+        
+        // 카드에서 데이터 인덱스 가져오기
+        const flightIndex = flightCard.getAttribute('data-flight-index');
+        console.log('📍 항공편 데이터 인덱스:', flightIndex);
+        
+        if (flightIndex === null || !window.flightListData) {
+            console.error('❌ JSP 항공편 데이터를 찾을 수 없습니다');
+            console.log('flightIndex:', flightIndex);
+            console.log('window.flightListData:', window.flightListData);
+            
+            // 폴백: DOM에서 직접 추출
+            return extractDataFromDOM(flightCard);
+        }
+        
+        // JSP에서 전달받은 실제 데이터 사용
+        const flightData = window.flightListData[parseInt(flightIndex)];
+        
+        if (!flightData) {
+            console.error('❌ 해당 인덱스의 항공편 데이터를 찾을 수 없습니다:', flightIndex);
+            return extractDataFromDOM(flightCard);
+        }
+        
+        console.log('📝 JSP에서 가져온 항공편 데이터:', flightData);
+        
+        // 공항 이름 매핑
+        const airportNames = {
+            'ICN': '서울/인천',
+            'GMP': '서울/김포',
+            'PUS': '부산',
+            'CJU': '제주',
+            'NRT': '도쿄/나리타',
+            'HND': '도쿄/하네다',
+            'KIX': '오사카/간사이',
+            'PEK': '베이징',
+            'PVG': '상하이',
+            'HKG': '홍콩',
+            'AMS': '암스테르담',
+            'CDG': '파리',
+            'LHR': '런던',
+            'JFK': '뉴욕',
+            'LAX': '로스앤젤레스'
+        };
+        
+        // 항공사 정보 결정
+        let airline = '항공사 정보';
+        let aircraft = 'B737-800';
+        
+        if (flightData.flightNo.startsWith('KE')) {
+            airline = '대한항공 운항';
+            aircraft = 'B777-300ER';
+        } else if (flightData.flightNo.startsWith('OZ')) {
+            airline = '아시아나항공 운항';
+            aircraft = 'A350-900';
+        } else if (flightData.flightNo.startsWith('LJ')) {
+            airline = '진에어 운항';
+            aircraft = 'B737-800';
+        } else if (flightData.flightNo.startsWith('JL')) {
+            airline = '일본항공 운항';
+            aircraft = 'B787-9';
+        }
+        
+        // 최종 데이터 구성
+        const finalData = {
+            flightId: flightData.flightId,
+            flightNumber: flightData.flightId, // flightNo 대신 flightId 사용
+            departureTime: flightData.departureTime,
+            arrivalTime: flightData.arrivalTime,
+            departureCode: flightData.departureCode,
+            arrivalCode: flightData.arrivalCode,
+            departureAirport: airportNames[flightData.departureCode] || flightData.departureCode,
+            arrivalAirport: airportNames[flightData.arrivalCode] || flightData.arrivalCode,
+            duration: flightData.duration,
+            airline: airline,
+            aircraft: aircraft
+        };
+        
+        console.log('✅ 최종 항공편 데이터:', finalData);
+        return finalData;
+    }
+    
+    // DOM에서 직접 데이터 추출하는 폴백 함수
+    function extractDataFromDOM(flightCard) {
+        console.log('🔄 DOM에서 직접 데이터 추출 (폴백)');
+        
+        const departureTimeEl = flightCard.querySelector('.departure-time');
+        const departureCodeEl = flightCard.querySelector('.departure-code');
+        const arrivalTimeEl = flightCard.querySelector('.arrival-time');
+        const arrivalCodeEl = flightCard.querySelector('.arrival-code');
+        const flightNumberEl = flightCard.querySelector('.flight-number');
+        const durationEl = flightCard.querySelector('.duration-text');
+        
+        return {
+            flightNumber: 'FALLBACK-ID', // 폴백 시에도 ID 형태로 표시
+            departureTime: departureTimeEl ? departureTimeEl.textContent.trim() : '출발시간',
+            arrivalTime: arrivalTimeEl ? arrivalTimeEl.textContent.trim() : '도착시간',
+            departureCode: departureCodeEl ? departureCodeEl.textContent.trim() : 'DEP',
+            arrivalCode: arrivalCodeEl ? arrivalCodeEl.textContent.trim() : 'ARR',
+            duration: durationEl ? durationEl.textContent.trim() : '소요시간',
+            departureAirport: '출발지',
+            arrivalAirport: '도착지',
+            airline: '항공사 정보',
+            aircraft: 'B737-800'
+        };
+    }
+    
+    // 전역 모달 팝업 표시 함수
+    function showGlobalFlightDetailsModal(flightData = null) {
+        console.log('🚀 전역 모달 팝업 표시 시작');
+        
+        const flightDetailsPopup = document.getElementById('flightDetailsPopup');
+        const overlay = document.getElementById('popupOverlay');
+        
+        if (flightDetailsPopup) {
+            console.log('✅ 모달 팝업 표시');
+            flightDetailsPopup.style.position = 'fixed';
+            flightDetailsPopup.style.left = '50%';
+            flightDetailsPopup.style.top = '50%';
+            flightDetailsPopup.style.transform = 'translate(-50%, -50%)';
+            flightDetailsPopup.style.width = '600px';
+            flightDetailsPopup.style.maxWidth = '90vw';
+            flightDetailsPopup.style.maxHeight = '80vh';
+            flightDetailsPopup.style.zIndex = '10000';
+            flightDetailsPopup.style.display = 'block';
+            
+            // 실제 항공편 데이터로 모달 내용 업데이트
+            if (flightData) {
+                updateModalWithFlightData(flightData);
+            } else {
+                console.warn('⚠️ 항공편 데이터가 없어 기본값을 사용합니다');
+                // 기본값으로 업데이트
+                updateModalWithFlightData({
+                    departureTime: '07:55',
+                    departureCode: 'ICN',
+                    departureAirport: '서울/인천',
+                    arrivalTime: '12:30',
+                    arrivalCode: 'AMS',
+                    arrivalAirport: '암스테르담',
+                    flightNumber: 'KE923',
+                    duration: '11시간 35분',
+                    airline: '대한항공 운항',
+                    aircraft: 'B777-300ER'
+                });
+            }
+        } else {
+            console.error('❌ flightDetailsPopup 요소를 찾을 수 없습니다');
+            alert('모달 팝업 요소를 찾을 수 없습니다. HTML을 확인해주세요.');
+        }
+        
+        if (overlay) {
+            console.log('✅ 오버레이 표시');
+            overlay.style.display = 'block';
+            overlay.style.zIndex = '9999';
+        }
+        
+        // 모달 닫기 이벤트 설정
+        setupModalCloseEvents();
+    }
+    
+    // 모달 내용을 항공편 데이터로 업데이트하는 함수
+    function updateModalWithFlightData(flightData) {
+        console.log('📝 모달 내용 업데이트 중...', flightData);
+        
+        // 현재 날짜 정보 생성
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+        const dayName = dayNames[today.getDay()];
+        const formattedDate = `${year}년 ${month}월 ${day}일 (${dayName})`;
+        
+        // 여정 정보 업데이트
+        const departureElement = document.getElementById('flightDetailDeparture');
+        const arrivalElement = document.getElementById('flightDetailArrival');
+        const durationElement = document.getElementById('flightDetailDuration');
+        
+        if (departureElement) {
+            departureElement.textContent = `출발지 ${flightData.departureCode} ${flightData.departureAirport}`;
+        }
+        
+        if (arrivalElement) {
+            arrivalElement.textContent = `도착지 ${flightData.arrivalCode} ${flightData.arrivalAirport}`;
+        }
+        
+        if (durationElement) {
+            durationElement.textContent = `총 ${flightData.duration} 여정`;
+        }
+        
+        // 항공편 정보 업데이트
+        const flightNumberElement = document.getElementById('flightDetailNumber');
+        const aircraftElement = document.getElementById('flightDetailAircraft');
+        const operatorElement = document.getElementById('flightDetailOperator');
+        
+        if (flightNumberElement) {
+            flightNumberElement.textContent = `항공편명 ${flightData.flightNumber}`;
+        }
+        
+        if (aircraftElement) {
+            aircraftElement.textContent = `항공기종 ${flightData.aircraft}`;
+        }
+        
+        if (operatorElement) {
+            operatorElement.textContent = flightData.airline;
+        }
+        
+        // 출발 정보 업데이트
+        const departureCodeElement = document.getElementById('flightDetailDepartureCode');
+        const departureTimeElement = document.getElementById('flightDetailDepartureTime');
+        const departureTerminalElement = document.getElementById('flightDetailDepartureTerminal');
+        
+        if (departureCodeElement) {
+            departureCodeElement.textContent = `${flightData.departureCode} ${flightData.departureAirport}`;
+        }
+        
+        if (departureTimeElement) {
+            departureTimeElement.textContent = `출발시간 ${formattedDate} ${flightData.departureTime}`;
+        }
+        
+        if (departureTerminalElement) {
+            departureTerminalElement.textContent = '터미널 2';
+        }
+        
+        // 여정 소요시간 업데이트
+        const journeyTimeElement = document.getElementById('flightDetailJourneyTime');
+        if (journeyTimeElement) {
+            journeyTimeElement.textContent = `${flightData.duration} 소요`;
+        }
+        
+        // 도착 정보 업데이트
+        const arrivalCodeElement = document.getElementById('flightDetailArrivalCode');
+        const arrivalTimeElement = document.getElementById('flightDetailArrivalTime');
+        const arrivalTerminalElement = document.getElementById('flightDetailArrivalTerminal');
+        
+        if (arrivalCodeElement) {
+            arrivalCodeElement.textContent = `${flightData.arrivalCode} ${flightData.arrivalAirport}`;
+        }
+        
+        if (arrivalTimeElement) {
+            arrivalTimeElement.textContent = `도착시간 ${formattedDate} ${flightData.arrivalTime}`;
+        }
+        
+        if (arrivalTerminalElement) {
+            arrivalTerminalElement.textContent = '터미널 1';
+        }
+        
+        console.log('✅ 모달 내용 업데이트 완료');
+    }
+    
+    // 모달 닫기 이벤트 설정 함수
+    function setupModalCloseEvents() {
+        console.log('🔧 모달 닫기 이벤트 설정 중...');
+        
+        const flightDetailsPopup = document.getElementById('flightDetailsPopup');
+        const overlay = document.getElementById('popupOverlay');
+        const closeBtn = document.getElementById('closeFlightDetailsBtn');
+        const confirmBtn = document.getElementById('confirmFlightDetailsBtn');
+        
+        // X 버튼 클릭으로 닫기
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function(e) {
+                console.log('❌ X 버튼 클릭 - 모달 닫기');
+                e.preventDefault();
+                e.stopPropagation();
+                closeModal();
+            });
+            console.log('✅ X 버튼 이벤트 설정 완료');
+        } else {
+            console.warn('⚠️ X 버튼을 찾을 수 없습니다');
+        }
+        
+        // 확인 버튼 클릭으로 닫기
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function(e) {
+                console.log('✅ 확인 버튼 클릭 - 모달 닫기');
+                e.preventDefault();
+                e.stopPropagation();
+                closeModal();
+            });
+            console.log('✅ 확인 버튼 이벤트 설정 완료');
+        }
+        
+        // 오버레이 클릭으로 닫기
+        if (overlay) {
+            overlay.addEventListener('click', function(e) {
+                console.log('🌫️ 오버레이 클릭 - 모달 닫기');
+                closeModal();
+            });
+            console.log('✅ 오버레이 클릭 이벤트 설정 완료');
+        }
+        
+        // ESC 키로 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                console.log('⌨️ ESC 키 누름 - 모달 닫기');
+                closeModal();
+            }
+        });
+        console.log('✅ ESC 키 이벤트 설정 완료');
+        
+        // 모달 닫기 함수
+        function closeModal() {
+            console.log('🚪 모달 창 닫기 실행');
+            
+            if (flightDetailsPopup) {
+                flightDetailsPopup.style.display = 'none';
+                console.log('✅ 모달 팝업 숨김');
+            }
+            
+            if (overlay) {
+                overlay.style.display = 'none';
+                console.log('✅ 오버레이 숨김');
+            }
+        }
     }
     
     // 공통 기능 초기화
@@ -208,6 +608,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Search Results Page Specific Functionality - JSP Version
     function initializeSearchResultsJSPFunctionality() {
+        console.log('🚀 initializeSearchResultsJSPFunctionality 함수 시작!');
+        console.log('📍 현재 페이지 URL:', window.location.href);
+        console.log('📄 페이지에 있는 모든 버튼들:', document.querySelectorAll('button'));
+        
         // Get all necessary elements
         const farePopup = document.getElementById('fareDetailsPopup');
         const flightDetailsPopup = document.getElementById('flightDetailsPopup');
@@ -219,6 +623,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const detailBtns = document.querySelectorAll('.detail-btn');
         const totalAmountDisplay = document.querySelector('.total-amount');
         let selectedFarePrice = '';
+        
+        console.log('🔍 DOM 요소 확인:');
+        console.log('flightDetailsPopup:', flightDetailsPopup);
+        console.log('overlay:', overlay);
+        console.log('closeFlightDetailsBtn:', closeFlightDetailsBtn);
+        console.log('confirmFlightDetailsBtn:', confirmFlightDetailsBtn);
+        
+        // details-btn 클래스를 가진 버튼들 확인
+        const detailsButtons = document.querySelectorAll('.details-btn');
+        console.log('🎯 .details-btn 버튼들:', detailsButtons);
+        console.log('🎯 .details-btn 개수:', detailsButtons.length);
+        
+        // flight-card 클래스를 가진 요소들 확인
+        const flightCards = document.querySelectorAll('.flight-card');
+        console.log('✈️ .flight-card 요소들:', flightCards);
+        console.log('✈️ .flight-card 개수:', flightCards.length);
         
         // Hide overlay initially
         if (overlay) {
@@ -279,69 +699,232 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         
-        // Set up event listeners for detail buttons
-        detailBtns.forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Get flight information from the closest flight-card
-                const flightCard = this.closest('.flight-card');
-                const flightInfoColumn = flightCard.querySelector('.flight-info-column');
-                
-                // Extract flight data
-                const departureTime = flightInfoColumn.querySelector('.departure-time').textContent;
-                const departureCode = flightInfoColumn.querySelector('.departure-code').textContent;
-                const arrivalTime = flightInfoColumn.querySelector('.arrival-time').textContent;
-                const arrivalCode = flightInfoColumn.querySelector('.arrival-code').textContent;
-                const durationTime = flightInfoColumn.querySelector('.duration-time').textContent;
-                const flightNumber = flightInfoColumn.querySelector('.flight-number').textContent;
-                const airlineName = flightInfoColumn.querySelector('.airline-name').textContent;
-                
-                // Fill flight details popup with data
-                updateFlightDetailsPopup(departureTime, departureCode, arrivalTime, arrivalCode, durationTime, flightNumber, airlineName);
-                
-                // Position and show the flight details popup
-                if (flightDetailsPopup) {
-                    flightDetailsPopup.style.position = 'fixed';
-                    flightDetailsPopup.style.left = '50%';
-                    flightDetailsPopup.style.top = '50%';
-                    flightDetailsPopup.style.transform = 'translate(-50%, -50%)';
-                    flightDetailsPopup.style.display = 'block';
-                }
-                
-                // Show overlay
-                if (overlay) {
-                    overlay.style.display = 'block';
+        // 동적으로 생성되는 상세보기 버튼을 위한 강력한 이벤트 위임
+        console.log('🎯 동적 상세보기 버튼 이벤트 설정 시작...');
+        
+        // 즉시 설정
+        setupDetailButtonEvents();
+        
+        // 1초 후에도 다시 설정 (동적 생성 대비)
+        setTimeout(function() {
+            console.log('🔄 1초 후 상세보기 버튼 재설정');
+            setupDetailButtonEvents();
+        }, 1000);
+        
+        // 3초 후에도 다시 설정 (느린 로딩 대비)
+        setTimeout(function() {
+            console.log('🔄 3초 후 상세보기 버튼 재설정');
+            setupDetailButtonEvents();
+        }, 3000);
+        
+        // MutationObserver로 동적으로 추가되는 요소들 감지
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList') {
+                    console.log('🔄 DOM 변경 감지됨, 상세보기 버튼 재설정');
+                    setupDetailButtonEvents();
                 }
             });
         });
         
+        // 전체 document를 관찰
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        // 상세보기 버튼 이벤트 설정 함수
+        function setupDetailButtonEvents() {
+            console.log('🔧 상세보기 버튼 이벤트 설정 중...');
+            
+            // 기존 이벤트 리스너 제거 후 재설정을 위해 새로운 방식 사용
+            const detailButtons = document.querySelectorAll('.details-btn');
+            console.log('🔍 찾은 상세보기 버튼 개수:', detailButtons.length);
+            
+            detailButtons.forEach((btn, index) => {
+                // 이미 이벤트가 설정된 버튼인지 확인
+                if (!btn.hasAttribute('data-event-attached')) {
+                    console.log(`✅ 버튼 ${index + 1}에 이벤트 리스너 설정`);
+                    
+                    btn.addEventListener('click', function(e) {
+                        console.log('🎉🎉🎉 상세보기 버튼 클릭됨! 🎉🎉🎉');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // 모달 팝업 표시
+                        showFlightDetailsModal();
+                    });
+                    
+                    // 이벤트 설정 완료 표시
+                    btn.setAttribute('data-event-attached', 'true');
+                }
+            });
+        }
+        
+        // 모달 팝업 표시 함수
+        function showFlightDetailsModal() {
+            console.log('🚀 모달 팝업 표시 시작');
+            
+            if (flightDetailsPopup) {
+                console.log('✅ 모달 팝업 표시');
+                flightDetailsPopup.style.position = 'fixed';
+                flightDetailsPopup.style.left = '50%';
+                flightDetailsPopup.style.top = '50%';
+                flightDetailsPopup.style.transform = 'translate(-50%, -50%)';
+                flightDetailsPopup.style.width = '600px';
+                flightDetailsPopup.style.maxWidth = '90vw';
+                flightDetailsPopup.style.maxHeight = '80vh';
+                flightDetailsPopup.style.zIndex = '10000';
+                flightDetailsPopup.style.display = 'block';
+                
+                // 기본 정보로 업데이트
+                updateFlightDetailsPopup('07:55', 'ICN', '12:30', 'AMS', '11시간 35분', 'KE923');
+            } else {
+                console.error('❌ flightDetailsPopup 요소를 찾을 수 없습니다');
+                alert('상세정보 팝업을 표시할 수 없습니다.');
+            }
+            
+            // 오버레이 표시
+            if (overlay) {
+                console.log('✅ 오버레이 표시');
+                overlay.style.display = 'block';
+                overlay.style.zIndex = '9999';
+            } else {
+                console.error('❌ overlay 요소를 찾을 수 없습니다');
+            }
+        }
+        
+        // 전체 문서에 대한 클릭 이벤트 위임 (백업용)
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.textContent && e.target.textContent.includes('상세 보기')) {
+                console.log('🎯 백업 이벤트 위임으로 상세보기 클릭 감지!');
+                e.preventDefault();
+                e.stopPropagation();
+                showFlightDetailsModal();
+            }
+        });
+        
         // Update flight details popup content
-        function updateFlightDetailsPopup(departureTime, departureCode, arrivalTime, arrivalCode, durationTime, flightNumber, airlineName) {
-            // Set route information
-            if (document.getElementById('flightDetailDeparture')) {
-                document.getElementById('flightDetailDeparture').textContent = `출발지 ${departureCode} 서울/인천`;
-                document.getElementById('flightDetailArrival').textContent = `도착지 ${arrivalCode} 도쿄/나리타`;
-                document.getElementById('flightDetailDuration').textContent = `총 ${durationTime} 여정`;
+        function updateFlightDetailsPopup(departureTime, departureCode, arrivalTime, arrivalCode, durationTime, flightNumber) {
+            console.log('팝업 내용 업데이트 중...', {
+                departureTime, departureCode, arrivalTime, arrivalCode, durationTime, flightNumber
+            });
+            
+            // 공항 코드를 전체 이름으로 매핑
+            const airportNames = {
+                'ICN': '서울/인천',
+                'GMP': '서울/김포', 
+                'PUS': '부산',
+                'CJU': '제주',
+                'NRT': '도쿄/나리타',
+                'HND': '도쿄/하네다',
+                'KIX': '오사카/간사이',
+                'PEK': '베이징',
+                'PVG': '상하이',
+                'HKG': '홍콩'
+            };
+            
+            const departureFullName = airportNames[departureCode] || departureCode;
+            const arrivalFullName = airportNames[arrivalCode] || arrivalCode;
+            
+            // 항공사 이름 결정
+            let airline = '일본항공 운항';
+            if (flightNumber.startsWith('KE')) {
+                airline = '대한항공 운항';
+            } else if (flightNumber.startsWith('OZ')) {
+                airline = '아시아나항공 운항';
+            } else if (flightNumber.startsWith('LJ')) {
+                airline = '진에어 운항';
+            } else if (flightNumber.startsWith('JL')) {
+                airline = '일본항공 운항';
+            }
+            
+            // Set route information - JSP에서 실제 사용하는 ID들로 수정
+            const departureElement = document.getElementById('flightDetailDeparture');
+            const arrivalElement = document.getElementById('flightDetailArrival'); 
+            const durationElement = document.getElementById('flightDetailDuration');
+            const flightNumberElement = document.getElementById('flightDetailNumber');
+            const operatorElement = document.getElementById('flightDetailOperator');
+            
+            console.log('📍 팝업 요소들 확인:');
+            console.log('departureElement:', departureElement);
+            console.log('arrivalElement:', arrivalElement);
+            console.log('durationElement:', durationElement);
+            console.log('flightNumberElement:', flightNumberElement);
+            console.log('operatorElement:', operatorElement);
+            
+            if (departureElement) {
+                departureElement.textContent = `출발지 ${departureCode} ${departureFullName}`;
+            }
+            
+            if (arrivalElement) {
+                arrivalElement.textContent = `도착지 ${arrivalCode} ${arrivalFullName}`;
+            }
+            
+            if (durationElement) {
+                durationElement.textContent = `총 ${durationTime} 여정`;
+            }
+            
+            if (flightNumberElement) {
+                flightNumberElement.textContent = `항공편명 ${flightNumber}`;
+            }
+            
+            if (operatorElement) {
+                operatorElement.textContent = airline;
+            }
+            
+            // Set departure information
+            const departureCodeElement = document.getElementById('flightDetailDepartureCode');
+            const departureTimeElement = document.getElementById('flightDetailDepartureTime');
+            const departureTerminalElement = document.getElementById('flightDetailDepartureTerminal');
+            const journeyTimeElement = document.getElementById('flightDetailJourneyTime');
+            
+            if (departureCodeElement) {
+                departureCodeElement.textContent = `${departureCode} ${departureFullName}`;
+            }
+            
+            if (departureTimeElement) {
+                // Format current date with Korean day name
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+                const dayName = dayNames[today.getDay()];
                 
-                // Set flight information
-                document.getElementById('flightDetailNumber').textContent = `항공편명 ${flightNumber}`;
-                document.getElementById('flightDetailAircraft').textContent = '항공기종 B737-800';
-                document.getElementById('flightDetailOperator').textContent = airlineName;
+                departureTimeElement.textContent = `출발시간 ${year}년 ${month}월 ${day}일 (${dayName}) ${departureTime}`;
+            }
+            
+            if (departureTerminalElement) {
+                departureTerminalElement.textContent = '터미널 2';
+            }
+            
+            if (journeyTimeElement) {
+                journeyTimeElement.textContent = `${durationTime} 소요`;
+            }
+            
+            // Set arrival information
+            const arrivalCodeElement = document.getElementById('flightDetailArrivalCode');
+            const arrivalTimeElement = document.getElementById('flightDetailArrivalTime');
+            const arrivalTerminalElement = document.getElementById('flightDetailArrivalTerminal');
+            
+            if (arrivalCodeElement) {
+                arrivalCodeElement.textContent = `${arrivalCode} ${arrivalFullName}`;
+            }
+            
+            if (arrivalTimeElement) {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+                const dayName = dayNames[today.getDay()];
                 
-                // Set departure information
-                document.getElementById('flightDetailDepartureCode').textContent = `${departureCode} 서울/인천`;
-                document.getElementById('flightDetailDepartureTime').textContent = `출발시간 2025년 05월 22일 (목) ${departureTime}`;
-                document.getElementById('flightDetailDepartureTerminal').textContent = '터미널 2';
-                
-                // Set journey duration
-                document.getElementById('flightDetailJourneyTime').textContent = `${durationTime} 소요`;
-                
-                // Set arrival information
-                document.getElementById('flightDetailArrivalCode').textContent = `${arrivalCode} 도쿄/나리타`;
-                document.getElementById('flightDetailArrivalTime').textContent = `도착시간 2025년 05월 22일 (목) ${arrivalTime}`;
-                document.getElementById('flightDetailArrivalTerminal').textContent = '터미널 1';
+                arrivalTimeElement.textContent = `도착시간 ${year}년 ${month}월 ${day}일 (${dayName}) ${arrivalTime}`;
+            }
+            
+            if (arrivalTerminalElement) {
+                arrivalTerminalElement.textContent = '터미널 1';
             }
         }
         
@@ -635,9 +1218,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // 스크롤 이벤트 - 헤더 애니메이션
+        // 스크롤 이벤트 - 헤더 애니메이션 (NULL 체크 추가)
         const header = document.querySelector('header');
         const headerTop = document.querySelector('.header-top');
+        
+        if (!header || !headerTop) {
+            console.log('⚠️ 헤더 요소를 찾을 수 없어 스크롤 애니메이션을 건너뜁니다.');
+            return; // 헤더가 없으면 나머지 코드 실행하지 않음
+        }
         let lastScrollTop = 0;
         let scrollDirection = 'none';
         
@@ -656,7 +1244,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 header.classList.add('scrolled');
                 
                 // 스크롤 다운 시 상단 메뉴 숨기기
-                if (scrollDirection === 'down' && scrollTop > 200 && headerTop) {
+                if (scrollDirection === 'down' && scrollTop > 200 && headerTop && headerTop.style) {
                     headerTop.style.transform = 'translateY(-100%)';
                     headerTop.style.opacity = '0';
                     header.style.transform = 'translateY(-' + headerTop.offsetHeight + 'px)';
