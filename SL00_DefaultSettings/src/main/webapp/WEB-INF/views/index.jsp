@@ -49,6 +49,8 @@
 <script>
     window.contextPath = "<%=request.getContextPath()%>";
     console.log("Initial contextPath:", window.contextPath);
+	
+	const contextPath = "<%= request.getContextPath() %>";
 </script>
 
 
@@ -65,7 +67,7 @@
                 </div>
                 
                 <div class="booking-content active" id="flight">
-                    <form id="searchForm" action="flightSearch.do" method="get">
+                    <form id="searchForm" action="" method="get">
                         <!-- Hidden inputs for form submission -->
                         <input type="hidden" name="departure" id="departureInput">
                         <input type="hidden" name="arrival" id="arrivalInput">
@@ -644,7 +646,7 @@
         </div>
     </section>
 
-	<jsp:include page="common/footer.jsp" />
+	<%--<jsp:include page="common/footer.jsp" />--%>
 
     <script>
         // JSP에서 JavaScript로 contextPath 전달

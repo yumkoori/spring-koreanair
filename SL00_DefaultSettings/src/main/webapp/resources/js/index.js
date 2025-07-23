@@ -1351,8 +1351,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 tripType: tripType
             });
             
-            const url = `flightSearch.do?${params.toString()}`;
-            window.location.href = url;
+			const url = `${contextPath}/api/search/flight?${params.toString()}`;
+			window.location.href = url;
+			
         });
     }
 

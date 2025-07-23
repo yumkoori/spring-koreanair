@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.flight.mapper.FlightSeatMapper">
+
+    <select id="getFlightSeatsGroupBySeatClass" resultType="org.doit.flight.dto.FlightSeatResponseDTO">
+        SELECT
+            sc.class_id,
+            sc.class_name,
+            sc.detail_class_name,
+            IFNULL(COUNT(fs.seat_id), 0) AS available_seat_count,
+            sp.price
+        FROM seat_price sp
+        JOIN seat_class sc ON sp.class_id = sc.class_id
+        LEFT JOIN flight_seat fs
+            ON fs.flight_id = sp.flight_id
+            AND fs.class_id = sp.class_id
+            AND fs.status = 'AVAILABLE'
+        WHERE sp.flight_id = #{flightId}
+        GROUP BY sc.class_id, sc.class_name, sc.detail_class_name, sp.price
+        HAVING available_seat_count >= #{passengers}
+        ORDER BY sc.class_id
+    </select>
+
+</mapper>
