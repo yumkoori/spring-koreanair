@@ -13,10 +13,17 @@ import lombok.ToString;
 @ToString
 public class FlightSearchResponseDTO {
     private String flightId;             
-    private String airlineName;          
+    private String airlineName;   
     private Timestamp departureTime; 
-    private Timestamp arrivalTime;   
+    private Timestamp arrivalTime; 
     private Long durationMinutes;         
     private Long availableSeatCount;
+    private String flightNo;
+    
+    
+    private String departureTimeFormatted;
+    private String arrivalTimeFormatted;
+    private String durationFormatted;
+
  
 }

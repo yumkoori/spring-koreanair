@@ -5,28 +5,32 @@
 
 <mapper namespace="org.doit.flight.mapper.FlightMapper">
 
-  <select id="getSearchFlight" resultType="org.doit.flight.dto.FlightSearchResponseDTO">
-    SELECT
-        f.flight_id,
-        ac.airline AS airline_name,
-        f.departure_time,
-        f.arrival_time,
-        TIMESTAMPDIFF(MINUTE, f.departure_time, f.arrival_time) AS duration_minutes,
-        COUNT(fs.seat_id) AS available_seat_count
-    FROM
-        flight f
-    JOIN aircraft ac ON f.aircraft_id = ac.aircraft_id
-    LEFT JOIN flight_seat fs ON f.flight_id = fs.flight_id AND fs.status = 'AVAILABLE'
-    LEFT JOIN seat_class sc ON sc.class_id = fs.class_id
-    WHERE
-        f.departure_airport_id = #{departure}
-        AND f.arrival_airport_id = #{arrival}
-        AND DATE(f.departure_time) = #{departureDate}
-    GROUP BY
-        f.flight_id, ac.airline, f.departure_time, f.arrival_time
-    ORDER BY
-        f.departure_time ASC
-  </select>
+<select id="getSearchFlight" resultType="org.doit.flight.dto.FlightSearchResponseDTO">
+  SELECT
+    f.flight_id AS flightId,
+    ac.airline AS airlineName,
+    f.flightNo AS flightNo,  
+    f.departure_time AS departureTime,
+    f.arrival_time AS arrivalTime,
+    TIMESTAMPDIFF(MINUTE, f.departure_time, f.arrival_time) AS durationMinutes,
+    COUNT(fs.seat_id) AS availableSeatCount
+  FROM
+    flight f
+  JOIN aircraft ac ON f.aircraft_id = ac.aircraft_id
+  LEFT JOIN flight_seat fs ON f.flight_id = fs.flight_id AND fs.status = 'AVAILABLE'
+  LEFT JOIN seat_class sc ON sc.class_id = fs.class_id
+  WHERE
+    f.departure_airport_id = #{departure}
+    AND f.arrival_airport_id = #{arrival}
+    AND DATE(f.departure_time) = #{departureDate}
+  GROUP BY
+    f.flight_id, ac.airline, f.flightNo, f.departure_time, f.arrival_time
+  ORDER BY
+    f.departure_time ASC
+</select>
+
+
+
   
 <select id="getWeekLowPrices" resultType="map">
   WITH RECURSIVE date_range AS (

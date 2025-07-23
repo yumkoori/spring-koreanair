@@ -29,10 +29,10 @@ public class FlightMapperTest {
 	public void getSearchFlightTest() {
 		//given
 		FlightSearchRequestDTO requestDTO = new FlightSearchRequestDTO(
-				"SIN", 
-				"PUS", 
-				LocalDate.now(), 
-				LocalDate.now(), 
+				"ICN", 
+				"AMS", 
+				LocalDate.of(2025, 6, 17), 
+				LocalDate.of(2025, 6, 17), 
 				1, 
 				SeatClass.ECONOMY, 
 				TripType.ONEWAY);
@@ -54,7 +54,7 @@ public class FlightMapperTest {
 		String departure = "ICN";
 		String arrival = "PUS";
 		//when
-		Map<String, Integer> weekprice = flightMapper.getWeekLowPrices(departureDate, departure, arrival);
+		Map<String,Map<String,Object>> weekprice = flightMapper.getWeekLowPrices(departureDate, departure, arrival);
 		//then
 		
 		System.out.println(weekprice);

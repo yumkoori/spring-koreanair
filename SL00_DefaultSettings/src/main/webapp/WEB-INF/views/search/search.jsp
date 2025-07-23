@@ -408,7 +408,7 @@
 							<div class="flight-times">
 								<div class="departure-block">
 									<div class="departure-time">
-										${flight.departureTime}
+										${flight.departureTimeFormatted}
 									</div>
 									<div class="departure-code">${param.departure}</div>
 								</div>
@@ -417,7 +417,7 @@
 									<div class="duration-text">
 										<c:choose>
 											<c:when test="${flight.durationMinutes > 0}">
-												${flight.durationMinutes}
+												${flight.durationFormatted}
 											</c:when>
 											<c:otherwise>
 												소요시간 미정
@@ -432,13 +432,13 @@
 
 								<div class="arrival-block">
 									<div class="arrival-time">
-										${flight.arrivalTime}
+										${flight.arrivalTimeFormatted}
 									</div>
 									<div class="arrival-code">${param.arrival}</div>
 								</div>
 							</div>
 							<div class="airline-info">
-								<span class="flight-number">${flight.flightId}</span>
+								<span class="flight-number">${flight.flightNo}</span>
 								<button class="details-btn">상세 보기</button>
 							</div>
 						</div>
