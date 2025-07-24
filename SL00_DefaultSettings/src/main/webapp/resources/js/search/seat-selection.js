@@ -239,7 +239,8 @@ document.addEventListener('DOMContentLoaded', function() {
                          const contextPath = window.contextPath || 
                                            (window.location.pathname.split('/')[1] ? '/' + window.location.pathname.split('/')[1] : '') ||
                                            '';
-                         const bookingUrl = contextPath + '/booking.do?' + bookingParams.toString();
+						 const bookingUrl = contextPath + '/api/booking?' + bookingParams.toString();
+
                          console.log('🎯 === 왕복 예약 페이지 이동 ===');
                          console.log('contextPath:', contextPath);
                          console.log('가는 편 총가격:', parseInt(outboundFlight.price).toLocaleString('ko-KR'), '원');
@@ -297,7 +298,8 @@ document.addEventListener('DOMContentLoaded', function() {
                      const contextPath = window.contextPath || 
                                        (window.location.pathname.split('/')[1] ? '/' + window.location.pathname.split('/')[1] : '') ||
                                        '';
-                     const bookingUrl = contextPath + '/booking.do?' + bookingParams.toString();
+					 const bookingUrl = contextPath + '/api/booking?' + bookingParams.toString();
+
                      console.log('🎯 === 편도 예약 페이지 이동 ===');
                      console.log('contextPath:', contextPath);
                      console.log('개별 가격:', parseInt(individualPrice).toLocaleString('ko-KR'), '원');
