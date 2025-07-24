@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.reservation.persistence.CheckinMapper">
+
+    <!-- CheckinVO 결과 매핑 -->
+    <resultMap id="CheckinResultMap" type="org.doit.reservation.domain.CheckinVO">
+        <id property="checkinId" column="checkin_id" />
+        <result property="bookingId" column="booking_id" />
+        <result property="flightId" column="flight_id" />
+        <result property="firstName" column="first_name" />
+        <result property="lastName" column="last_name" />
+        <result property="phoneNumber" column="phone_number" />
+        <result property="email" column="email" />
+        <result property="seatNumber" column="seat_number" />
+        <result property="seatClass" column="seat_class" />
+        <result property="checkinStatus" column="checkin_status" />
+        <result property="status" column="status" />
+        <result property="checkinTime" column="checkin_time" />
+        <result property="gateNumber" column="gate_number" />
+        <result property="boardingGroup" column="boarding_group" />
+        
+        <!-- 항공편 정보 (조인) -->
+        <result property="flightNumber" column="flight_number" />
+        <result property="departureCode" column="departure_code" />
+        <result property="arrivalCode" column="arrival_code" />
+        <result property="departureAirportName" column="departure_name" />
+        <result property="arrivalAirportName" column="arrival_name" />
+        <result property="departureTime" column="departure_time" />
+        <result property="arrivalTime" column="arrival_time" />
+        <result property="departureAirport" column="departure_airport" />
+        <result property="arrivalAirport" column="arrival_airport" />
+        <result property="aircraftModel" column="aircraft_model" />
+    </resultMap>
+
+    <!-- 좌석 맵 결과 매핑 -->
+    <resultMap id="SeatMapResultMap" type="map">
+        <result property="seatNumber" column="seat_number" />
+        <result property="seatClass" column="seat_class" />
+        <result property="isOccupied" column="is_occupied" />
+        <result property="seatRow" column="seat_row" />
+        <result property="seatColumn" column="seat_column" />
+        <result property="seatPrice" column="seat_price" />
+    </resultMap>
+
+    <!-- 예약번호로 체크인 정보 조회 -->
+    <select id="findByBookingId" resultMap="CheckinResultMap">
+        SELECT 
+            c.checkin_id,
+            c.booking_id,
+            c.flight_id,
+            c.seat_number,
+            c.checkin_time,
+            c.status,
+            c.gate_number,
+            c.boarding_group,
+            f.flight_number,
+            f.departure_code,
+            f.arrival_code,
+            da.airport_name as departure_name,
+            aa.airport_name as arrival_name,
+            f.departure_time,
+            f.arrival_time
+        FROM checkin c
+        INNER JOIN flight f ON c.flight_id = f.flight_id
+        INNER JOIN airport da ON f.departure_code = da.airport_code
+        INNER JOIN airport aa ON f.arrival_code = aa.airport_code
+        WHERE c.booking_id = #{bookingId}
+    </select>
+
+    <!-- 항공편의 좌석 맵 정보 조회 -->
+    <select id="getSeatMap" resultMap="SeatMapResultMap">
+        SELECT 
+            sm.seat_number,
+            sm.seat_class,
+            sm.seat_row,
+            sm.seat_column,
+            sm.seat_price,
+            CASE 
+                WHEN c.seat_number IS NOT NULL THEN 1
+                ELSE 0
+            END as is_occupied
+        FROM seat_map sm
+        LEFT JOIN checkin c ON sm.seat_number = c.seat_number 
+                              AND c.flight_id = #{flightId}
+        WHERE sm.flight_id = #{flightId}
+        ORDER BY sm.seat_row, sm.seat_column
+    </select>
+
+    <!-- 특정 좌석의 사용 횟수 조회 (중복 확인용) -->
+    <select id="countSeatUsage" resultType="int">
+        SELECT COUNT(*)
+        FROM checkin 
+        WHERE flight_id = #{flightId}
+          AND seat_number = #{seatNumber}
+    </select>
+
+    <!-- 체크인 정보 저장 -->
+    <insert id="insertCheckin" parameterType="org.doit.reservation.domain.CheckinVO">
+        <selectKey keyProperty="checkinId" resultType="string" order="BEFORE">
+            SELECT 'CHK' || TO_CHAR(SYSDATE, 'YYYYMMDD') || LPAD(checkin_seq.NEXTVAL, 4, '0') FROM DUAL
+        </selectKey>
+        INSERT INTO checkin (
+            checkin_id,
+            booking_id,
+            flight_id,
+            seat_number,
+            checkin_time,
+            status,
+            boarding_group
+        ) VALUES (
+            #{checkinId},
+            #{bookingId},
+            #{flightId},
+            #{seatNumber},
+            #{checkinTime},
+            #{status},
+            #{boardingGroup}
+        )
+    </insert>
+
+    <!-- 출발 시간 조회 (좌석 변경 가능 여부 확인용) -->
+    <select id="getDepartureTime" resultType="java.util.Date">
+        SELECT 
+            TO_DATE(TO_CHAR(f.departure_date, 'YYYY-MM-DD') || ' ' || f.departure_time, 'YYYY-MM-DD HH24:MI') as departure_datetime
+        FROM booking b
+        INNER JOIN flight f ON b.flight_id = f.flight_id
+        WHERE b.booking_id = #{bookingId}
+    </select>
+
+    <!-- 기존 좌석 정보 조회 -->
+    <select id="getExistingSeat" resultType="string">
+        SELECT bs.booking_seat_id 
+        FROM booking_seat bs
+        WHERE bs.booking_id = #{bookingId}
+    </select>
+
+    <!-- booking_seat에서 기존 좌석 삭제 -->
+    <delete id="deleteBookingSeat">
+        DELETE FROM booking_seat WHERE booking_id = #{bookingId}
+    </delete>
+
+    <!-- check_in에서 기존 체크인 정보 삭제 -->
+    <delete id="deleteCheckIn">
+        DELETE FROM check_in WHERE booking_seat_id IN 
+        (SELECT booking_seat_id FROM booking_seat WHERE booking_id = #{bookingId})
+    </delete>
+
+    <!-- booking_seat에 새 좌석 정보 삽입 -->
+    <insert id="insertBookingSeat">
+        INSERT INTO booking_seat (
+            booking_seat_id,
+            booking_id,
+            flight_seat_id
+        ) VALUES (
+            #{bookingSeatId},
+            #{bookingId},
+            (SELECT seat_id FROM flight_seat WHERE flight_id = #{flightId} AND CONCAT(row, seat) = #{seatNumber})
+        )
+    </insert>
+
+    <!-- check_in에 새 체크인 정보 삽입 -->
+    <insert id="insertCheckIn">
+        INSERT INTO check_in (
+            check_in,
+            booking_seat_id,
+            check_in_time,
+            check_in_type,
+            baggage_count,
+            check_in_status
+        ) VALUES (
+            #{checkInId},
+            #{bookingSeatId},
+            NOW(),
+            'ONLINE',
+            0,
+            'COMPLETED'
+        )
+    </insert>
+
+    <!-- 좌석 변경 (booking_seat 테이블에만 저장) -->
+    <update id="updateSeat">
+        UPDATE booking 
+        SET 
+            booking_id = booking_id
+        WHERE booking_id = #{bookingId}
+    </update>
+
+    <!-- 연락처 정보 업데이트 -->
+    <update id="updateContactInfo">
+        UPDATE booking 
+        SET 
+            passenger_phone = #{phoneNumber},
+            email = #{email},
+            updated_date = SYSDATE
+        WHERE booking_id = #{bookingId}
+    </update>
+
+    <!-- 체크인 상태 변경 -->
+    <update id="updateCheckinStatus">
+        UPDATE checkin 
+        SET 
+            status = #{status},
+            updated_time = SYSDATE
+        WHERE booking_id = #{bookingId}
+    </update>
+
+    <!-- 게이트 정보 업데이트 -->
+    <update id="updateGateInfo">
+        UPDATE checkin c
+        SET 
+            c.gate_number = #{gateNumber},
+            c.updated_time = SYSDATE
+        WHERE c.flight_id = #{flightId}
+    </update>
+
+    <!-- 체크인 통계 조회 (추가 기능) -->
+    <select id="getCheckinStats" resultType="map">
+        SELECT 
+            COUNT(*) as total_checkin,
+            COUNT(CASE WHEN status = 'COMPLETED' THEN 1 END) as completed_count,
+            COUNT(CASE WHEN boarding_group = '1' THEN 1 END) as first_class_count,
+            COUNT(CASE WHEN boarding_group = '2' THEN 1 END) as business_class_count,
+            COUNT(CASE WHEN boarding_group = '3' THEN 1 END) as economy_class_count
+        FROM checkin 
+        WHERE flight_id = #{flightId}
+    </select>
+
+    <!-- 탑승 그룹별 체크인 목록 조회 -->
+    <select id="getCheckinByBoardingGroup" resultMap="CheckinResultMap">
+        SELECT 
+            c.checkin_id,
+            c.booking_id,
+            c.flight_id,
+            c.seat_number,
+            c.checkin_time,
+            c.status,
+            c.gate_number,
+            c.boarding_group,
+            f.flight_number,
+            b.passenger_name
+        FROM checkin c
+        INNER JOIN flight f ON c.flight_id = f.flight_id
+        INNER JOIN booking b ON c.booking_id = b.booking_id
+        WHERE c.flight_id = #{flightId}
+          AND c.boarding_group = #{boardingGroup}
+        ORDER BY c.checkin_time
+    </select>
+
+    <!-- 좌석 가용성 실시간 조회 -->
+    <select id="getAvailableSeats" resultType="string">
+        SELECT sm.seat_number
+        FROM seat_map sm
+        LEFT JOIN checkin c ON sm.seat_number = c.seat_number 
+                              AND c.flight_id = #{flightId}
+        WHERE sm.flight_id = #{flightId}
+          AND c.seat_number IS NULL
+        ORDER BY sm.seat_row, sm.seat_column
+    </select>
+
+    <!-- ===== 중복 좌석 선택 방지 관련 쿼리 ===== -->
+    
+    <!-- 현재 선택된 좌석 목록 조회 -->
+    <select id="getOccupiedSeats" resultType="string">
+        SELECT CONCAT(fs.row, fs.seat) as seat_number
+        FROM booking_seat bs
+        INNER JOIN flight_seat fs ON bs.flight_seat_id = fs.seat_id
+        WHERE fs.flight_id = #{flightId}
+    </select>
+    
+    <!-- 특정 좌석 선택 여부 확인 -->
+    <select id="isSeatOccupied" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM booking_seat bs
+        INNER JOIN flight_seat fs ON bs.flight_seat_id = fs.seat_id
+        WHERE fs.flight_id = #{flightId}
+          AND CONCAT(fs.row, fs.seat) = #{seatNumber}
+    </select>
+    
+    <!-- 좌석 가격 조회 -->
+    <select id="getSeatPrice" resultType="int">
+        SELECT COALESCE(fs.price, 0) as seat_price
+        FROM flight_seat fs
+        WHERE fs.flight_id = #{flightId}
+          AND CONCAT(fs.row, fs.seat) = #{seatNumber}
+    </select>
+
+</mapper> 

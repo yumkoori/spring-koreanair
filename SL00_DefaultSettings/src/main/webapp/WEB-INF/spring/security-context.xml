@@ -24,6 +24,8 @@
         <intercept-url pattern="/**/*.png" access="permitAll"/>
         <intercept-url pattern="/**/*.jpg" access="permitAll"/>
         <intercept-url pattern="/**/*.gif" access="permitAll"/>
+        <intercept-url pattern="/views/checkin/**" access="permitAll"/>
+		<intercept-url pattern="/views/reservation/**" access="permitAll"/>
         
         <!-- Public pages -->
         <intercept-url pattern="/login" access="permitAll"/>
@@ -31,6 +33,7 @@
         <intercept-url pattern="/kakao/**" access="permitAll"/>
         <intercept-url pattern="/" access="permitAll"/>
         <intercept-url pattern="/index.jsp" access="permitAll"/>
+        
         
         <!-- Admin pages -->
         <intercept-url pattern="/admin/**" access="hasRole('ADMIN')"/>

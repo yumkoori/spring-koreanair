@@ -5,14 +5,35 @@
 
 <configuration>
   <settings>
-    <!-- 컬러명이 c_name 일 경우  cName 변환 -->
+    <!-- 컬럼명이 c_name 일 경우 cName 변환 -->
     <setting name="mapUnderscoreToCamelCase" value="true"/>
+    <!-- Enable lazy loading -->
+    <setting name="lazyLoadingEnabled" value="true"/>
+    <!-- Disable aggressive lazy loading -->
+    <setting name="aggressiveLazyLoading" value="false"/>
+    <!-- Enable multiple result sets -->
+    <setting name="multipleResultSetsEnabled" value="true"/>
+    <!-- Use column labels instead of column names -->
+    <setting name="useColumnLabel" value="true"/>
+    <!-- Enable automatic generation of keys -->
+    <setting name="useGeneratedKeys" value="true"/>
+    <!-- Default executor type -->
+    <setting name="defaultExecutorType" value="SIMPLE"/>
+    <!-- Default statement timeout -->
+    <setting name="defaultStatementTimeout" value="25"/>
+    <!-- Log implementation -->
+    <setting name="logImpl" value="SLF4J"/>
   </settings>
+
   <typeAliases>
-    <!-- <typeAlias type="org.doit.ik.domain.DeptDTO" alias="DeptDTO" /> --> 
+    <!-- 공통 타입들 -->
     <typeAlias type="java.util.Map" alias="Map" />
     <typeAlias type="java.util.HashMap" alias="HashMap" />
     <typeAlias type="java.util.List" alias="List" />
+    
+    <!-- 도메인 모델 -->
+    <typeAlias alias="User" type="org.doit.member.model.User"/>
+    <typeAlias alias="Reservation" type="org.doit.member.model.ReservationDTO"/>
   </typeAliases>
-</configuration>   
- 
+
+</configuration>

@@ -181,13 +181,15 @@
                                 </c:choose>
                             </c:when>
                             <c:otherwise>
-                                <h4 style="text-align:center; margin-bottom:20px;"></h4>
-                                <c:if test="${sessionScope.lookupFailed}">
-                                    <div class="booking-error"><p>입력하신 정보와 일치하는 예약 내역이 없습니다.</p></div>
-                                    <c:remove var="lookupFailed" scope="session"/>
-                                </c:if>
-                                <form class="checkin-form airline-form" action="lookup" method="POST">
-                                    <div class="form-description"><p>예약번호 또는 항공권번호</p></div>
+                                <div class="form-description">
+                                    <p></p>
+                                </div>
+                                <div id="bookingErrorBox" class="booking-error hidden">
+                                    <p id="bookingErrorMessage"></p>
+                                </div>
+                        
+                                <form class="checkin-form" action="${pageContext.request.contextPath}/reservation/lookup.htm" method="post" accept-charset="UTF-8">
+
                                     <div class="checkin-inputs">
                                         <div class="input-group"><input type="text" class="airline-input" name="bookingId" placeholder="예) B001" required></div>
                                         <div class="input-group"><label>출발일</label><input type="date" class="airline-input" name="departureDate" required></div>
@@ -204,6 +206,7 @@
                         </c:choose>
                     </div>
                 </div>
+
 
                 <div class="booking-content" id="schedule">
                      <div class="schedule-form">
@@ -243,6 +246,113 @@
                         </div>
                 </div>
                 
+
+					<%-- '체크인' 탭 (최종 수정) --%>
+					<div class="booking-content" id="schedule">
+					    <div class="lookup-result-wrapper">
+					        <c:choose>
+					            <%-- [조건 1] 로그인한 사용자의 경우 --%>
+					            <c:when test="${not empty sessionScope.user}">
+					                 <h3 style="text-align:center; margin-bottom: 20px;">'${sessionScope.user.koreanName}'님의 예약으로 체크인</h3>
+					                <c:choose>
+					                    <%-- [조건 1-1] 체크인 가능 예약이 있을 때 --%>
+					                    <c:when test="${not empty sessionScope.userBookings}">
+					                        <div class="lookup-result-body" style="background: #f8fbff; border-radius: 18px; box-shadow: 0 4px 18px rgba(0,100,222,0.08); padding: 32px 28px; margin-bottom: 28px; display: flex; align-items: stretch;">
+					                            <a href="${pageContext.request.contextPath}/checkupForm.do" class="lookup-another lookup-another-abs" style="position: absolute; top: 32px; right: 28px;">
+					                                다른 체크인 조회 <i class="fas fa-chevron-right" style="font-size:12px;"></i>
+					                            </a>
+					                            <div style="flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+					                                <div class="lookup-result-header" style="margin-bottom:18px;">
+					                                    <div class="lookup-status-container">
+					                                        <span class="lookup-status">구매 완료</span>
+					                                        <span class="lookup-booking-id">예약번호 : ${sessionScope.userBookings[0].bookingId}</span>
+					                                    </div>
+					                                </div>
+					                                <div class="lookup-route-info" style="display:flex; align-items:center; gap: 40px;">
+					                                    <div class="lookup-route-airports">
+					                                        <div class="airport-details" style="text-align:center;">
+					                                            <div style="font-size:32px; font-weight:800;">${sessionScope.userBookings[0].departureAirportId}</div>
+					                                            <div class="airport-name">${sessionScope.userBookings[0].departureAirportName}</div>
+					                                        </div>
+					                                        <i class="fas fa-plane"></i>
+					                                        <div class="airport-details" style="text-align:center;">
+					                                            <div style="font-size:32px; font-weight:800;">${sessionScope.userBookings[0].arrivalAirportId}</div>
+					                                            <div class="airport-name">${sessionScope.userBookings[0].arrivalAirportName}</div>
+					                                        </div>
+					                                    </div>
+					                                    <div style="display:flex; flex-direction:column; justify-content:center;">
+					                                        <div class="lookup-flight-time" style="font-size:16px; color:#222;">
+					                                            <fmt:formatDate value="${sessionScope.userBookings[0].departureTime}" pattern="yyyy년 MM월 dd일(E) HH:mm"/>
+					                                            ~
+					                                            <fmt:formatDate value="${sessionScope.userBookings[0].arrivalTime}" pattern="HH:mm"/>
+					                                        </div>
+					                                    </div>
+					                                </div>
+					                            </div>
+					                            <div class="lookup-actions" style="display:flex; align-items:flex-end; margin-left:40px;">
+					                                <a href="${pageContext.request.contextPath}/checkin/detail.htm?bookingId=${sessionScope.userBookings[0].bookingId}" class="btn-more">체크인</a>
+					                            </div>
+					                        </div>
+					                    </c:when>
+					                    <c:otherwise>
+					                        <%-- 체크인 가능 예약이 없을 때 --%>
+					                        <div class="no-booking-container">
+					                            <div class="no-booking-message">체크인 가능한 예약 내역이 없습니다.</div>
+					                             <a href="${pageContext.request.contextPath}/checkin/lookup.htm" class="btn btn-lookup-another">
+					                                <i class="fa-solid fa-ticket"></i>
+					                                <span>다른 예약으로 체크인하기</span>
+					                            </a>
+					                        </div>
+					                    </c:otherwise>
+					                </c:choose>
+					            </c:when>
+								 <%-- '체크인' 탭의 비회원 폼 (최종 수정) --%>
+								<c:otherwise>
+								    <div class="form-description">
+								        <p></p>
+								    </div>
+								
+								    <div id="checkinErrorBox" class="booking-error hidden">
+								        <p id="checkinErrorMessage"></p>
+								    </div>
+								
+								                                        <form id="checkinLookupForm" action="${pageContext.request.contextPath}/checkin/lookup.htm" method="post" accept-charset="UTF-8">
+								        <div class="schedule-inputs">
+								            <div class="input-group">
+								                <label for="checkinBookingId">예약/항공권 번호</label>
+								                <input type="text" id="checkinBookingId" name="bookingId" placeholder="예약번호 6자리" required>
+								            </div>
+								            <div class="input-group">
+								                <label for="checkinDepartureDate">출발일</label>
+								                <input type="date" id="checkinDepartureDate" name="departureDate" required>
+								            </div>
+								                                                        <div class="input-group">
+                                                <label for="checkinLastName">성 (영문)</label>
+                                                <input type="text" id="checkinLastName" name="lastName" placeholder="HONG" required>
+                                            </div>
+                                            <div class="input-group">
+                                                <label for="checkinFirstName">이름 (영문)</label>
+                                                <input type="text" id="checkinFirstName" name="firstName" placeholder="GILDONG" required>
+                                            </div>
+								            <div class="search-section">
+								                <button type="submit" class="search-flights-btn">체크인 시작</button>
+								            </div>
+								        </div>
+								        
+								        <%-- [핵심 수정] 체크박스 영역을 입력 필드 그룹(schedule-inputs) 밖으로 이동 --%>
+								        <div class="form-notice" style="margin-top: 20px;">
+								            <label class="checkbox-label">
+								                <input type="checkbox" name="agreeInfo" required>
+								                <span class="checkmark"></span>
+								                [필수] 본인의 예약 정보이거나 승객으로부터 조회를 위임 받은 예약 정보입니다.
+								            </label>
+								        </div>
+								    </form>
+								</c:otherwise>
+					        </c:choose>
+					    </div>
+					</div>
+
                 <div class="booking-content" id="status">
                     <div class="status-form">
                         <div class="status-options">

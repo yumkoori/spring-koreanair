@@ -36,7 +36,7 @@
         <property name="maxLifetime" value="1800000"/>
     </bean>
 
-    <!-- Transaction Manager -->
+
     <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
         <property name="dataSource" ref="dataSource"/>
     </bean>
@@ -47,11 +47,12 @@
     <!-- MyBatis Configuration -->
     <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
         <property name="dataSource" ref="dataSource"/>
-        <property name="configLocation" value="classpath:org/doit/member/mybatis-config.xml"/>
-        <property name="mapperLocations" value="classpath:org/doit/member/mapper/*.xml"/>
+        <property name="configLocation" value="classpath:org/doit/config/mybatis-config.xml"/>
+        <property name="typeAliasesPackage" value="org.doit.reservation.domain" />
+        <property name="mapperLocations" value="classpath:org/doit/**/mapper/*.xml" />
     </bean>
 
     <!-- MyBatis Mapper Scanner -->
-    <mybatis-spring:scan base-package="org.doit.member.dao, org.doit.member.mapper, org.doit.admin.mapper, org.doit.payment.mapper, org.doit.reservation.mapper, org.doit.member.mapper"/>
+    <mybatis-spring:scan base-package="org.doit.ik.mapper, org.doit.member.dao, org.doit.member.mapper, org.doit.admin.mapper, org.doit.payment.mapper, org.doit.reservation.mapper, org.doit.member.mapper, org.doit.reservation.persistence"/>
 
 </beans>

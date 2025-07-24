@@ -14,13 +14,31 @@
     <!-- Enable Spring MVC -->
     <annotation-driven/>
 
+
     <!-- Serve static resources -->
     <resources mapping="/css/**" location="/css/"/>
     <resources mapping="/js/**" location="/js/"/>
     <resources mapping="/images/**" location="/images/"/>
     <resources mapping="/resources/**" location="/"/>
-    
-    <!-- Enable default servlet handling for static resources -->
+
+
+	<!-- JSON View Resolver for AJAX requests -->
+	<beans:bean id="jsonView" class="org.springframework.web.servlet.view.json.MappingJackson2JsonView">
+		<beans:property name="contentType" value="application/json;charset=UTF-8" />
+	</beans:bean>
+	
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+	<beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/views/" />
+		<beans:property name="suffix" value=".jsp" />
+		<beans:property name="viewClass" value="org.springframework.web.servlet.view.JstlView" />
+		<beans:property name="order" value="1" />
+		<beans:property name="contentType" value="text/html;charset=UTF-8" />
+	</beans:bean>
+	
+	<context:component-scan base-package="org.doit" />
+	
+
     <default-servlet-handler/>
 
     <!-- Component Scan for Controllers -->

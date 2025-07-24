@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.reservation.persistence.ReservationMapper">
+
+    <resultMap id="ReservationResultMap" type="org.doit.reservation.domain.ReservationVO">
+        <id property="bookingId" column="booking_id" />
+        <result property="userId" column="user_id" />
+        <result property="flightId" column="flight_id" />
+        <result property="firstName" column="first_name" />
+        <result property="lastName" column="last_name" />
+        <result property="passengerName" column="passenger_name" />
+        <result property="passengerType" column="passenger_type" />
+        <result property="gender" column="gender" />
+        <result property="birthDate" column="birth_date" />
+        <result property="phone" column="phone" />
+        <result property="passengerPhone" column="passenger_phone" />
+        <result property="email" column="email" />
+        <result property="assignedSeat" column="assigned_seat" />
+        <result property="cabinClass" column="cabin_class" />
+        <result property="totalPrice" column="total_price" />
+        <result property="bookingStatus" column="booking_status" />
+        <result property="status" column="status" />
+        <result property="bookingDate" column="booking_date" />
+        <result property="checkinStatus" column="checkin_status" />
+        
+        <result property="flightNumber" column="flight_number" />
+        <result property="departureAirportId" column="departure_airport_id" />
+        <result property="arrivalAirportId" column="arrival_airport_id" />
+        <result property="departureAirportName" column="departure_airport_name" />
+        <result property="arrivalAirportName" column="arrival_airport_name" />
+        <result property="departureDate" column="departure_date" />
+        <result property="arrivalDate" column="arrival_date" />
+        <result property="departureTime" column="departure_time" />
+        <result property="arrivalTime" column="arrival_time" />
+        <result property="departureAirport" column="departure_airport" />
+        <result property="arrivalAirport" column="arrival_airport" />
+        <result property="aircraftType" column="aircraft_type" />
+        <result property="memberId" column="member_id" />
+        <result property="ticketNumber" column="ticket_number" />
+        <result property="assignedSeat" column="assigned_seat" />
+    </resultMap>
+
+    <sql id="reservationJoinQuery">
+        SELECT 
+            b.booking_id,
+            b.user_no as user_id, 
+            b.flight_id,
+            p.first_name,
+            p.last_name,
+            CONCAT(p.first_name, ' ', p.last_name) as passenger_name,
+            p.birth_date,
+            p.gender,
+            p.passenger_type,
+            f.flightNO as flight_number,
+            f.departure_airport_id as departure_airport_id,
+            f.arrival_airport_id as arrival_airport_id,
+            da.airport_name as departure_airport_name,
+            aa.airport_name as arrival_airport_name,
+            f.departure_time,
+            f.arrival_time,
+            u.phone,
+            u.email,
+            u.user_id as member_id,
+            sc.class_name as cabin_class,
+            CASE 
+                WHEN bs.flight_seat_id IS NOT NULL THEN 
+                    CONCAT(fs.row, fs.seat)
+                ELSE NULL
+            END as assigned_seat
+        FROM booking b
+        INNER JOIN flight f ON b.flight_id = f.flight_id
+        INNER JOIN airport da ON f.departure_airport_id = da.airport_id
+        INNER JOIN airport aa ON f.arrival_airport_id = aa.airport_id
+        LEFT JOIN passenger p ON b.booking_id = p.booking_id
+        LEFT JOIN users u ON p.user_no = u.user_no
+        LEFT JOIN booking_seat bs ON b.booking_id = bs.booking_id
+        LEFT JOIN flight_seat fs ON bs.flight_seat_id = fs.seat_id
+        LEFT JOIN seat_class sc ON fs.class_id = sc.class_id
+    </sql>
+
+    <select id="findByBookingIdAndName" resultMap="ReservationResultMap">
+        <include refid="reservationJoinQuery"/>
+        WHERE b.booking_id = #{bookingId}
+          AND p.last_name = #{lastName}
+    </select>
+
+    <select id="findByBookingIdAndDateAndFullName" resultMap="ReservationResultMap">
+        <include refid="reservationJoinQuery"/>
+        WHERE b.booking_id = #{bookingId}
+          AND DATE(f.departure_time) = #{departureDate}
+          AND p.last_name = #{lastName}
+          AND p.first_name = #{firstName}
+        GROUP BY b.booking_id
+    </select>
+
+    <select id="findByBookingIdAndUserId" resultMap="ReservationResultMap">
+        <include refid="reservationJoinQuery"/>
+        WHERE b.booking_id = #{bookingId}
+          AND b.user_no = #{userId}
+    </select>
+
+    <select id="findByBookingId" resultMap="ReservationResultMap">
+        <include refid="reservationJoinQuery"/>
+        WHERE b.booking_id = #{bookingId}
+    </select>
+
+    <select id="findByUserId" resultMap="ReservationResultMap">
+        <include refid="reservationJoinQuery"/>
+        WHERE b.user_no = #{userId}
+        ORDER BY b.booking_id DESC
+    </select>
+
+    <insert id="insertReservation" parameterType="org.doit.reservation.domain.ReservationVO">
+        INSERT INTO booking (
+            booking_id,
+            user_no, 
+            flight_id
+        ) VALUES (
+            #{bookingId},
+            #{userId},
+            #{flightId}
+        )
+    </insert>
+
+    <update id="updateReservation" parameterType="org.doit.reservation.domain.ReservationVO">
+        UPDATE booking 
+        SET 
+            user_no = #{userId},
+            flight_id = #{flightId}
+        WHERE booking_id = #{bookingId}
+    </update>
+
+    <update id="cancelReservation">
+        UPDATE booking 
+        SET 
+            status = 'CANCELLED',
+            cancel_reason = #{reason},
+            cancel_date = SYSDATE
+        WHERE booking_id = #{bookingId}
+    </update>
+
+    <update id="updateReservationStatus">
+        UPDATE booking 
+        SET status = #{status}
+        WHERE booking_id = #{bookingId}
+    </update>
+
+    <!-- 예약취소 정보 조회 -->
+    <select id="findCancelReservationInfo" resultType="org.doit.reservation.domain.CancelReservationVO">
+        SELECT 
+            b.booking_id as bookingId,
+            b.flight_id as flightId,
+            p.last_name as lastName,
+            p.first_name as firstName,
+            f.departure_time as departureTime,
+            f.arrival_time as arrivalTime,
+            f.departure_airport_id as departureAirportId,
+            da.airport_name as departureAirportName,
+            f.arrival_airport_id as arrivalAirportId,
+            aa.airport_name as arrivalAirportName,
+            CAST(COALESCE(sc.base_price, 0) AS DOUBLE) as baseFare,
+            CAST(0 AS DOUBLE) as tax,
+            CAST(COALESCE(sc.cancellation_penalty, 0) AS INTEGER) as penaltyFee,
+            u.phone as phone,
+            u.email as email
+        FROM booking b
+        INNER JOIN flight f ON b.flight_id = f.flight_id
+        INNER JOIN airport da ON f.departure_airport_id = da.airport_id
+        INNER JOIN airport aa ON f.arrival_airport_id = aa.airport_id
+        INNER JOIN passenger p ON b.booking_id = p.booking_id
+        LEFT JOIN users u ON p.user_no = u.user_no
+        LEFT JOIN booking_seat bs ON b.booking_id = bs.booking_id
+        LEFT JOIN flight_seat fs ON bs.flight_seat_id = fs.seat_id
+        LEFT JOIN seat_class sc ON fs.class_id = sc.class_id
+        WHERE b.booking_id = #{bookingId}
+    </select>
+
+    <select id="getReservationStats" resultType="map">
+        SELECT 
+            COUNT(*) as total_count
+        FROM booking 
+        WHERE user_no = #{userId}
+    </select>
+
+</mapper>
