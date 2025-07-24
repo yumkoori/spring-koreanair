@@ -236,9 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
                          });
                          
                          // contextPath 가져오기 (여러 방법 시도)
-                         const contextPath = window.contextPath || 
-                                           (window.location.pathname.split('/')[1] ? '/' + window.location.pathname.split('/')[1] : '') ||
-                                           '';
+                         const contextPath = window.contextPath || '';
 						 const bookingUrl = contextPath + '/api/booking?' + bookingParams.toString();
 
                          console.log('🎯 === 왕복 예약 페이지 이동 ===');
@@ -295,9 +293,7 @@ document.addEventListener('DOMContentLoaded', function() {
                      });
                      
                      // contextPath 가져오기 (여러 방법 시도)
-                     const contextPath = window.contextPath || 
-                                       (window.location.pathname.split('/')[1] ? '/' + window.location.pathname.split('/')[1] : '') ||
-                                       '';
+                     const contextPath = window.contextPath || '';
 					 const bookingUrl = contextPath + '/api/booking?' + bookingParams.toString();
 
                      console.log('🎯 === 편도 예약 페이지 이동 ===');

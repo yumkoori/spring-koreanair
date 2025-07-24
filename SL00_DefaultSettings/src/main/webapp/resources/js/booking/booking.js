@@ -881,8 +881,9 @@ function savePassengerInfo(passengerIndex) {
         
         // 요청 URL 확인
         console.log('window.contextPath:', window.contextPath);
-        const requestUrl = window.contextPath + '/passenger.do';
-        console.log('요청 URL:', requestUrl);
+		const requestUrl = window.contextPath + '/api/passenger';
+
+		console.log('요청 URL:', requestUrl);
         
         // FormData 내용 확인
         console.log('=== FormData 내용 확인 ===');
@@ -1325,8 +1326,8 @@ function initializeGuestPasswordValidation() {
             bookingId: bookingId,
             bookingPW: bookingPW
         };
-        
-        const requestUrl = window.contextPath + '/updateNonUserPW.do';
+		const requestUrl = window.contextPath + '/api/save/nonUserPw';
+
         console.log('📍 요청 URL:', requestUrl);
         console.log('📦 요청 데이터:', JSON.stringify(requestData));
         console.log('🌐 전체 contextPath:', window.contextPath);
@@ -1357,13 +1358,34 @@ function initializeGuestPasswordValidation() {
                 
                 // JSON 파싱 시도
                 try {
-                    const jsonData = JSON.parse(text);
-                    console.log('✅ JSON 파싱 성공:', jsonData);
-                    return jsonData;
+                    // JSON인지 XML인지 확인
+                    if (text.trim().startsWith('<')) {
+                        // XML 응답 처리
+                        console.log('📄 XML 응답 감지됨, 파싱 중...');
+                        const parser = new DOMParser();
+                        const xmlDoc = parser.parseFromString(text, 'text/xml');
+                        
+                        // XML에서 status와 message 추출
+                        const statusNode = xmlDoc.querySelector('status');
+                        const messageNode = xmlDoc.querySelector('message');
+                        
+                        const xmlData = {
+                            status: statusNode ? statusNode.textContent : 'unknown',
+                            message: messageNode ? messageNode.textContent : '응답 파싱 오류'
+                        };
+                        
+                        console.log('✅ XML 파싱 성공:', xmlData);
+                        return xmlData;
+                    } else {
+                        // JSON 응답 처리
+                        const jsonData = JSON.parse(text);
+                        console.log('✅ JSON 파싱 성공:', jsonData);
+                        return jsonData;
+                    }
                 } catch (parseError) {
-                    console.error('❌ JSON 파싱 실패:', parseError);
+                    console.error('❌ 응답 파싱 실패:', parseError);
                     console.error('원본 텍스트:', text);
-                    throw new Error('서버 응답을 JSON으로 파싱할 수 없습니다: ' + parseError.message);
+                    throw new Error('서버 응답을 파싱할 수 없습니다: ' + parseError.message);
                 }
             });
         })

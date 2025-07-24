@@ -32,4 +32,8 @@ public class BookingService {
 		
 		return bookingId;
 	}
+	
+	public void updateNonUserPW(String bookingId, String bookingPW) {
+	    bookingMapper.updateNonUserPW(bookingId, bookingPW);
+	}
 }

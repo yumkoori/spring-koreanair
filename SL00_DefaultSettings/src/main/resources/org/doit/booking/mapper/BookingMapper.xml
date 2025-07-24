@@ -25,4 +25,11 @@
     )
 </insert>
 
+
+<update id="updateNonUserPW" parameterType="map">
+    UPDATE booking
+    SET booking_pw = #{bookingPW}
+    WHERE booking_id = #{bookingId}
+</update>
+
 </mapper>  
