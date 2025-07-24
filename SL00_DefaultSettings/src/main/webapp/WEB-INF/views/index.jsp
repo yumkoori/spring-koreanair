@@ -12,6 +12,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
     
+    <script>
+        // contextPath 설정 - JavaScript에서 사용할 수 있도록 전역 변수로 설정
+        window.contextPath = '${pageContext.request.contextPath}';
+    </script>
+    
     <style>
         .lookup-result-wrapper { padding: 30px; }
         .lookup-result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
@@ -188,7 +193,7 @@
                                     <p id="bookingErrorMessage"></p>
                                 </div>
                         
-                                <form class="checkin-form" action="${pageContext.request.contextPath}/reservation/lookup.htm" method="post" accept-charset="UTF-8">
+                                <form class="checkin-form" action="${pageContext.request.contextPath}/reservation/lookup.htm" method="post" accept-charset="UTF-8" onsubmit="return false;">
 
                                     <div class="checkin-inputs">
                                         <div class="input-group"><input type="text" class="airline-input" name="bookingId" placeholder="예) B001" required></div>

@@ -24,6 +24,7 @@
         <intercept-url pattern="/**/*.png" access="permitAll"/>
         <intercept-url pattern="/**/*.jpg" access="permitAll"/>
         <intercept-url pattern="/**/*.gif" access="permitAll"/>
+        <intercept-url pattern="/favicon.ico" access="permitAll"/>
         <intercept-url pattern="/views/checkin/**" access="permitAll"/>
 		<intercept-url pattern="/views/reservation/**" access="permitAll"/>
         
@@ -32,7 +33,15 @@
         <intercept-url pattern="/register" access="permitAll"/>
         <intercept-url pattern="/kakao/**" access="permitAll"/>
         <intercept-url pattern="/" access="permitAll"/>
+        <intercept-url pattern="/index" access="permitAll"/>
         <intercept-url pattern="/index.jsp" access="permitAll"/>
+        
+        <!-- Reservation and Checkin pages for non-members -->
+        <intercept-url pattern="/reservation/lookup.htm" access="permitAll"/>
+        <intercept-url pattern="/reservation/detail.htm" access="permitAll"/>
+        <intercept-url pattern="/checkin/lookup.htm" access="permitAll"/>
+        <intercept-url pattern="/checkin/detail.htm" access="permitAll"/>
+        <intercept-url pattern="/autocomplete.do" access="permitAll"/>
         
         
         <!-- Admin pages -->

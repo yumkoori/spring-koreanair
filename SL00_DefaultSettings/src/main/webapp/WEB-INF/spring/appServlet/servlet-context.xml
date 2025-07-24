@@ -36,20 +36,10 @@
 		<beans:property name="contentType" value="text/html;charset=UTF-8" />
 	</beans:bean>
 	
-	<context:component-scan base-package="org.doit" />
-	
-
     <default-servlet-handler/>
 
     <!-- Component Scan for Controllers -->
-    <context:component-scan base-package="org.doit.member.controller"/>
-
-    <!-- View Resolver for JSP -->
-    <beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
-        <beans:property name="prefix" value="/WEB-INF/views/"/>
-        <beans:property name="suffix" value=".jsp"/>
-        <beans:property name="order" value="1"/>
-    </beans:bean>
+    <context:component-scan base-package="org.doit.member.controller, org.doit.reservation.controller"/>
 
     <!-- Multipart Resolver for File Upload - Disabled for now -->
     <!-- 
@@ -62,14 +52,11 @@
     <!-- Interceptors -->
     <interceptors>
         <interceptor>
-            <mapping path="/**"/>
-            <exclude-mapping path="/login"/>
-            <exclude-mapping path="/register"/>
-            <exclude-mapping path="/checkUserId"/>
-            <exclude-mapping path="/checkEmail"/>
-            <exclude-mapping path="/css/**"/>
-            <exclude-mapping path="/js/**"/>
-            <exclude-mapping path="/images/**"/>
+            <mapping path="/admin/**"/>
+            <mapping path="/user/**"/>
+            <mapping path="/dashboard"/>
+            <mapping path="/logout"/>
+            <mapping path="/reservation/mylist.htm"/>
             <beans:bean class="org.doit.member.interceptor.AuthenticationInterceptor"/>
         </interceptor>
     </interceptors>

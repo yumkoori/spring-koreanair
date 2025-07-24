@@ -43,8 +43,9 @@ public class ReservationController {
      */
     @GetMapping("/lookup.htm")
     public String lookupForm(Model model) {
-        log.info("비회원 예약 조회 폼 페이지 요청");
-        return "reservation.lookup";
+        log.info("=== GET 요청: 비회원 예약 조회 폼 페이지 요청 ===");
+        log.info("View name returned: reservation/lookup");
+        return "reservation/lookup";
     }
     
     /**
@@ -53,16 +54,32 @@ public class ReservationController {
      */
     @PostMapping("/lookup.htm") 
     @ResponseBody // 이 메서드의 반환 값이 HTTP 응답 본문에 직접 쓰여지도록 지정
-    public ResponseEntity<Map<String, Object>> lookupReservation( // JSON 응답을 위한 반환 타입
-            @RequestParam("bookingId") String bookingId,
-            @RequestParam("departureDate") String departureDate,
-            @RequestParam("lastName") String lastName,
-            @RequestParam("firstName") String firstName,
-            HttpSession session,
-            RedirectAttributes redirectAttributes, // 이 경우는 RedirectAttributes는 사용되지 않음
-            Model model) { // 이 경우는 Model도 사용되지 않음
+    public ResponseEntity<Map<String, Object>> lookupReservation(
+            @RequestParam(value = "bookingId", required = false) String bookingId,
+            @RequestParam(value = "departureDate", required = false) String departureDate,
+            @RequestParam(value = "lastName", required = false) String lastName,
+            @RequestParam(value = "firstName", required = false) String firstName,
+            HttpSession session) {
         
         log.info("비회원 예약 조회 요청 - bookingId: " + bookingId + ", departureDate: " + departureDate + ", lastName: " + lastName + ", firstName: " + firstName);
+        
+        // 파라미터 유효성 검사
+        if (bookingId == null || bookingId.trim().isEmpty()) {
+            log.warn("예약번호 누락");
+            return ResponseUtils.createErrorResponse("예약번호를 입력해주세요.");
+        }
+        if (departureDate == null || departureDate.trim().isEmpty()) {
+            log.warn("출발일 누락");
+            return ResponseUtils.createErrorResponse("출발일을 선택해주세요.");
+        }
+        if (lastName == null || lastName.trim().isEmpty()) {
+            log.warn("성(영문) 누락");
+            return ResponseUtils.createErrorResponse("성(영문)을 입력해주세요.");
+        }
+        if (firstName == null || firstName.trim().isEmpty()) {
+            log.warn("이름(영문) 누락");
+            return ResponseUtils.createErrorResponse("이름(영문)을 입력해주세요.");
+        }
         
         Map<String, Object> response = new HashMap<>(); // JSON 응답을 구성할 Map
         try {
@@ -112,8 +129,9 @@ public class ReservationController {
             // 2. 체크인에서 넘어온 경우 checkinReservation 세션 확인
             ReservationVO checkinReservation = (ReservationVO) session.getAttribute("checkinReservation");
             
-            log.info("test:"+lookupResult);
-            log.info("checkinReservation:"+checkinReservation);
+            // 세션에서 예약 정보 확인
+            log.debug("lookupResult: " + (lookupResult != null ? lookupResult.getBookingId() : "null"));
+            log.debug("checkinReservation: " + (checkinReservation != null ? checkinReservation.getBookingId() : "null"));
             
             if (lookupResult != null && bookingId.equals(lookupResult.getBookingId())) {
                 // DB에서 최신 정보 재조회

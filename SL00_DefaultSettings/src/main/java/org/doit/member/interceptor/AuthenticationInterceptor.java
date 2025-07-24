@@ -15,11 +15,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         String uri = request.getRequestURI();
         String contextPath = request.getContextPath();
         
-        if (uri.endsWith("/login") || uri.endsWith("/register") || 
-            uri.contains("/css/") || uri.contains("/js/") || uri.contains("/images/") ||
-            uri.endsWith("/") || uri.endsWith("/index") || uri.contains("/kakao/")) {
-            return true;
-        }
+        // Spring Security와 함께 사용되는 추가 인증 체크
         
         HttpSession session = request.getSession(false);
         if (session == null) {

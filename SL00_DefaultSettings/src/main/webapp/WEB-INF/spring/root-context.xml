@@ -15,7 +15,7 @@
            http://www.springframework.org/schema/tx/spring-tx.xsd">
 
     <!-- Component Scan for Service and DAO layers -->
-    <context:component-scan base-package="org.doit.member">
+    <context:component-scan base-package="org.doit.member, org.doit.reservation">
         <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
         <context:exclude-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
     </context:component-scan>

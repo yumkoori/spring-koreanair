@@ -3004,7 +3004,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-            fetch('reservation/lookup.htm', {
+            fetch(window.contextPath + '/reservation/lookup.htm', {
 
                 method: 'POST',
 
@@ -3033,7 +3033,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (data.success) {
 
-                    window.location.href = window.contextPath + '/' + data.redirectUrl;
+                    window.location.href = (window.contextPath || '') + '/' + data.redirectUrl;
 
                 } else {                    if (errorBox && errorMessageElement) {
 

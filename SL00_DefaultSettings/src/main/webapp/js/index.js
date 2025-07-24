@@ -505,6 +505,65 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     }
     
+    // 예약 조회 AJAX 처리 (메인 페이지에만 존재)
+    const reservationLookupForm = document.querySelector('#checkin .checkin-form');
+    if (reservationLookupForm) {
+        reservationLookupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('예약 조회 폼 제출 이벤트 - AJAX 처리 시작');
+            
+            // 필수 동의 체크
+            const agreeCheckbox = this.querySelector('input[type="checkbox"]');
+            if (agreeCheckbox && !agreeCheckbox.checked) {
+                alert('[필수] 항목에 동의해주셔야 조회가 가능합니다.');
+                return;
+            }
+            
+            // 에러 메시지 숨기기
+            const errorBox = document.getElementById('bookingErrorBox');
+            if (errorBox) errorBox.classList.add('hidden');
+            
+            // AJAX 요청
+            const formData = new FormData(this);
+            console.log('FormData 생성 완료, AJAX 요청 시작');
+            
+            fetch(window.contextPath + '/reservation/lookup.htm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams(formData)
+            })
+            .then(response => {
+                console.log('응답 받음:', response);
+                return response.json();
+            })
+            .then(data => {
+                console.log('JSON 데이터:', data);
+                if (data.success) {
+                    const redirectUrl = window.contextPath + '/' + data.redirectUrl;
+                    console.log('리다이렉트 URL:', redirectUrl);
+                    window.location.href = redirectUrl;
+                } else {
+                    const errorMessageElement = document.getElementById('bookingErrorMessage');
+                    if (errorBox && errorMessageElement) {
+                        errorMessageElement.textContent = data.error || '알 수 없는 오류가 발생했습니다.';
+                        errorBox.classList.remove('hidden');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('AJAX 오류:', error);
+                const errorMessageElement = document.getElementById('bookingErrorMessage');
+                if (errorBox && errorMessageElement) {
+                    errorMessageElement.textContent = '조회 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+                    errorBox.classList.remove('hidden');
+                }
+            });
+        });
+    }
+
     // 페이지 캐시 관련 이벤트 (메인 페이지에만 존재)
     const checkinTab = document.querySelector('#checkin');
     if (checkinTab) {

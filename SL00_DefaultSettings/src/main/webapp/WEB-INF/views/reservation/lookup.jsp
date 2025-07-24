@@ -1,6 +1,25 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>예약 조회</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        // contextPath 정의 (JavaScript에서 사용)
+        window.contextPath = '${pageContext.request.contextPath}';
+        console.log("ContextPath in head:", window.contextPath);
+        console.log("ContextPath length:", window.contextPath.length);
+    </script>
+</head>
+<body class="airline-main-body">
+    <jsp:include page="../common/header.jsp" />
 
 <style>
     .lookup-result-wrapper { padding: 30px; }
@@ -112,15 +131,23 @@
                                 <p id="bookingErrorMessage"></p>
                             </div>
                     
-                            <form class="checkin-form" action="${pageContext.request.contextPath}/reservation/lookup.htm" method="post">
+                            <form class="checkin-form" action="${pageContext.request.contextPath}/reservation/lookup.htm" method="post" onsubmit="return false;">
                                 <div class="checkin-inputs">
                                     <div class="input-group">
-                                        <label for="lookupBookingId">예약번호 또는 항공권번호</label>
-                                        <input type="text" id="lookupBookingId" name="bookingId" placeholder="예약번호 6자리 입력" required>
+                                        <label for="lookupBookingId">예약번호</label>
+                                        <input type="text" id="lookupBookingId" name="bookingId" placeholder="예) BKDON001" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="lookupDepartureDate">출발일</label>
+                                        <input type="date" id="lookupDepartureDate" name="departureDate" required>
                                     </div>
                                     <div class="input-group">
                                         <label for="lookupLastName">성 (영문)</label>
                                         <input type="text" id="lookupLastName" name="lastName" placeholder="HONG" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="lookupFirstName">이름 (영문)</label>
+                                        <input type="text" id="lookupFirstName" name="firstName" placeholder="GILDONG" required>
                                     </div>
                                     <div class="search-section">
                                         <button type="submit" class="search-flights-btn">조회</button>
@@ -144,13 +171,111 @@
 </section>
 
 <script>
-    // contextPath 정의 (JavaScript에서 사용)
-    window.contextPath = '<%=request.getContextPath()%>';
-    console.log("ContextPath:", window.contextPath);
+    // contextPath는 이미 head에서 정의됨
+    console.log("ContextPath in body script:", window.contextPath);
     
     // 에러 메시지 표시 (detail 페이지로 이동할 때는 표시하지 않음)
     <c:if test="${not empty error}">
         document.getElementById('bookingErrorBox').classList.remove('hidden');
         document.getElementById('bookingErrorMessage').textContent = '${error}';
     </c:if>
-</script> 
+    
+    // AJAX 폼 처리 함수
+    function handleFormSubmit(form) {
+        console.log('AJAX 처리 함수 시작');
+        
+        // 필수 동의 체크
+        const agreeCheckbox = form.querySelector('input[name="agreeInfo"]');
+        if (agreeCheckbox && !agreeCheckbox.checked) {
+            alert('[필수] 항목에 동의해주셔야 조회가 가능합니다.');
+            return;
+        }
+        
+        // 에러 메시지 숨기기
+        const errorBox = document.getElementById('bookingErrorBox');
+        if (errorBox) errorBox.classList.add('hidden');
+        
+        // AJAX 요청
+        const formData = new FormData(form);
+        console.log('FormData 생성 완료, AJAX 요청 시작');
+        
+        fetch(window.contextPath + '/reservation/lookup.htm', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Accept': 'application/json'
+            },
+            body: new URLSearchParams(formData)
+        })
+        .then(response => {
+            console.log('응답 받음:', response);
+            return response.json();
+        })
+        .then(data => {
+            console.log('JSON 데이터:', data);
+            if (data.success) {
+                const redirectUrl = window.contextPath + '/' + data.redirectUrl;
+                console.log('리다이렉트 URL:', redirectUrl);
+                window.location.href = redirectUrl;
+            } else {
+                const errorMessageElement = document.getElementById('bookingErrorMessage');
+                if (errorBox && errorMessageElement) {
+                    errorMessageElement.textContent = data.error || '알 수 없는 오류가 발생했습니다.';
+                    errorBox.classList.remove('hidden');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('AJAX 오류:', error);
+            const errorMessageElement = document.getElementById('bookingErrorMessage');
+            if (errorBox && errorMessageElement) {
+                errorMessageElement.textContent = '조회 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+                errorBox.classList.remove('hidden');
+            }
+        });
+    }
+
+    // AJAX 폼 처리 - 간단한 버전
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('페이지 로드됨 - contextPath:', window.contextPath);
+        
+        const lookupForm = document.querySelector('.checkin-form');
+        console.log('폼 찾기:', lookupForm ? '성공' : '실패');
+        
+        if (lookupForm) {
+            console.log('이벤트 리스너 등록 시작');
+            
+            // 먼저 클릭 이벤트로 테스트
+            const submitBtn = lookupForm.querySelector('button[type="submit"], input[type="submit"], .search-flights-btn');
+            console.log('제출 버튼 찾기:', submitBtn);
+            
+            if (submitBtn) {
+                submitBtn.addEventListener('click', function(event) {
+                    console.log('버튼 클릭 이벤트 발생!');
+                    event.preventDefault();
+                    console.log('기본 동작 방지됨');
+                    
+                    // 여기서 AJAX 처리
+                    handleFormSubmit(lookupForm);
+                });
+            }
+            
+            lookupForm.addEventListener('submit', function(event) {
+                console.log('폼 제출 이벤트 발생 - AJAX 처리 시작');
+                event.preventDefault();
+                handleFormSubmit(this);
+            });
+            
+            // 폼에 onsubmit 속성 직접 설정 (추가 안전장치)
+            lookupForm.onsubmit = function(e) { 
+                console.log('onsubmit 핸들러 실행됨');
+                e.preventDefault();
+                return false; 
+            };
+        }
+    });
+</script>
+
+    <jsp:include page="../common/footer.jsp" />
+</body>
+</html> 
