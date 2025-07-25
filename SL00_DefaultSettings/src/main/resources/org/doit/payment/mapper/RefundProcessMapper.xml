@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.payment.mapper.RefundProcessMapper">
+
+  <!-- booking_id와 user_no로 위변조 검사 후 merchant_uid 조회 -->
+  <select id="validateAndGetMerchantUid" parameterType="map" resultType="string">
+    SELECT merchant_uid 
+    FROM payment 
+    WHERE booking_id = (
+      SELECT booking_id 
+      FROM booking 
+      WHERE booking_id = #{dto.bookingId} AND user_no = #{dto.userNo}
+    )
+  </select>
+
+  <!-- merchant_uid로 결제 상태 업데이트 -->
+  <update id="updateRefundStatus" parameterType="map">
+    UPDATE payment 
+    SET status_code = #{status} 
+    WHERE merchant_uid = #{merchantUid}
+  </update>
+
+  <!-- booking_id로 예약 상태를 CANCELLED로 업데이트 -->
+  <update id="updateBookingStatus" parameterType="map">
+    UPDATE booking 
+    SET booking_status = 'CANCELLED' 
+    WHERE booking_id = #{dto.bookingId}
+  </update>
+
+  <!-- merchant_uid로 결제 금액 조회 -->
+  <select id="getPaymentAmount" parameterType="string" resultType="string">
+    SELECT payment_amount 
+    FROM payment 
+    WHERE merchant_uid = #{merchantUid}
+  </select>
+
+</mapper> 

@@ -39,7 +39,7 @@
     <default-servlet-handler/>
 
     <!-- Component Scan for Controllers -->
-    <context:component-scan base-package="org.doit.member.controller, org.doit.reservation.controller"/>
+    <context:component-scan base-package="org.doit"/>
 
     <!-- Multipart Resolver for File Upload - Disabled for now -->
     <!-- 

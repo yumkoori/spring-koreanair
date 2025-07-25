@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.payment.mapper.PaymentVerifyMapper">
+
+  <!-- imp_uid로 DB에서 merchant_uid와 amount를 조회 -->
+  <select id="getPaymentCompareInfo" parameterType="string" resultType="org.doit.payment.domain.PaymentCompareDTO">
+    SELECT merchant_uid AS merchantUid, amount
+    FROM payment 
+    WHERE imp_uid = #{impUid}
+  </select>
+
+  <!-- merchant_uid로 DB에서 merchant_uid와 amount를 조회 -->
+  <select id="getPaymentCompareInfoByMerchantUid" parameterType="string" resultType="org.doit.payment.domain.PaymentCompareDTO">
+    SELECT merchant_uid AS merchantUid, payment_amount AS amount
+    FROM payment 
+    WHERE merchant_uid = #{merchantUid}
+  </select>
+
+  <!-- merchant_uid로 결제 상태를 PAID로 업데이트하고 paid_at 시간을 설정 -->
+  <update id="updatePaymentStatusToPaid" parameterType="string">
+    UPDATE payment 
+    SET status_code = 'PAID', paid_at = NOW() 
+    WHERE merchant_uid = #{merchantUid}
+  </update>
+
+</mapper> 
