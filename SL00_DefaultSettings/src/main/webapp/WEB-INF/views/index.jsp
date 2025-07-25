@@ -40,6 +40,140 @@
         .btn-lookup-another { display: inline-flex; align-items: center; justify-content: center; background: #0064de; color: white; padding: 10px 20px; border-radius: 20px; text-decoration: none; transition: background-color 0.3s; }
         .btn-lookup-another i { margin-right: 5px; }
         .btn-lookup-another:hover { background-color: #0051a3; }
+        
+        /* 공항 검색 드롭다운 스타일 */
+        .airport-dropdown {
+            position: fixed;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            width: 350px;
+            max-height: 400px;
+            z-index: 10000;
+            font-family: 'Nanum Gothic', sans-serif;
+        }
+        
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .dropdown-header span {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-btn:hover {
+            color: #333;
+        }
+        
+        .search-box {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .search-box input:focus {
+            border-color: #0066cc;
+        }
+        
+        .search-results {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        
+        .dropdown-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .dropdown-item.no-result {
+            color: #999;
+            text-align: center;
+            cursor: default;
+        }
+        
+        .dropdown-item.no-result:hover {
+            background-color: transparent;
+        }
+        
+        .airport-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .airport-item .airport-code {
+            font-weight: 700;
+            font-size: 16px;
+            color: #0066cc;
+            min-width: 45px;
+        }
+        
+        .airport-info {
+            flex: 1;
+        }
+        
+        .airport-info .airport-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+        
+        .airport-info .airport-full-name {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* 출발지/도착지 입력 필드 클릭 가능하도록 스타일 추가 */
+        .airport-input {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .airport-input:hover {
+            background-color: #f8f9fa;
+        }
     </style>
 </head>
 <body class="airline-main-body">
@@ -74,17 +208,41 @@
                     <div class="route-section">
                         <div class="route-inputs">
                             <div class="airport-input departure">
-                                <div class="airport-code">SEL</div>
-                                <div class="airport-name">서울</div>
+                                <div class="airport-code">CJU</div>
+                                <div class="airport-name">제주</div>
                             </div>
                             <button class="swap-route-btn">
                                 <i class="fas fa-exchange-alt"></i>
                             </button>
                             <div class="airport-input arrival">
-                                <div class="airport-code">To</div>
-                                <div class="airport-name">도착지</div>
+                                <div class="airport-code">GMP</div>
+                                <div class="airport-name">서울/김포</div>
                             </div>
                         </div>
+                    </div>
+                    
+                    <!-- 출발지 검색 드롭다운 -->
+                    <div id="departure-dropdown" class="airport-dropdown" style="display: none;">
+                        <div class="dropdown-header">
+                            <span>출발지를 선택하세요</span>
+                            <button id="departure-close" class="close-btn">&times;</button>
+                        </div>
+                        <div class="search-box">
+                            <input type="text" id="departure-search" placeholder="도시명 또는 공항코드를 입력하세요">
+                        </div>
+                        <div id="departure-results" class="search-results"></div>
+                    </div>
+                    
+                    <!-- 도착지 검색 드롭다운 -->
+                    <div id="arrival-dropdown" class="airport-dropdown" style="display: none;">
+                        <div class="dropdown-header">
+                            <span>도착지를 선택하세요</span>
+                            <button id="arrival-close" class="close-btn">&times;</button>
+                        </div>
+                        <div class="search-box">
+                            <input type="text" id="arrival-search" placeholder="도시명 또는 공항코드를 입력하세요">
+                        </div>
+                        <div id="arrival-results" class="search-results"></div>
                     </div>
                     
                     <div class="booking-details">
@@ -120,7 +278,17 @@
                         </div>
                         
                         <div class="search-section">
-                            <button class="search-flights-btn">항공편 검색</button>
+                            <form id="searchForm" action="${pageContext.request.contextPath}/api/search/flight" method="get">
+                                <!-- Hidden inputs for form submission -->
+                                <input type="hidden" name="departure" id="departureInput">
+                                <input type="hidden" name="arrival" id="arrivalInput">
+                                <input type="hidden" name="departureDate" id="departureDateInput">
+                                <input type="hidden" name="returnDate" id="returnDateInput">
+                                <input type="hidden" name="passengers" id="passengersInput">
+                                <input type="hidden" name="seatClass" id="seatClassInput">
+                                <input type="hidden" name="tripType" id="tripTypeInput">
+                                <button type="submit" class="search-flights-btn">항공편 검색</button>
+                            </form>
                         </div>
                     </div>
                 </div>
