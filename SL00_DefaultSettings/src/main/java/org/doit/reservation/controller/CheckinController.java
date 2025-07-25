@@ -432,26 +432,10 @@ public class CheckinController {
                         String dbPassengerName = dbReservation.getFullPassengerName();
                         
                         log.info("DB 검증 - 로그인 사용자: " + loginUserName + ", DB 예약 승객명: " + dbPassengerName);
+                        log.info("DB 검증 - firstName: " + dbReservation.getFirstName() + ", lastName: " + dbReservation.getLastName());
+                        log.info("DB 검증 - 로그인 사용자 영어명: " + loginUser.getEnglishName());
                         
-                        boolean nameMatches = false;
-                        if (loginUserName != null && dbPassengerName != null) {
-                            // 한국어 이름 비교
-                            if (loginUserName.equals(dbPassengerName)) {
-                                nameMatches = true;
-                            }
-                            // 영어 이름 비교
-                            else if (loginUser.getEnglishName() != null && loginUser.getEnglishName().equals(dbPassengerName)) {
-                                nameMatches = true;
-                            }
-                            // firstName + lastName 조합 비교
-                            else if (dbReservation.getFirstName() != null && dbReservation.getLastName() != null) {
-                                String fullName = dbReservation.getFirstName() + " " + dbReservation.getLastName();
-                                if (loginUserName.equals(fullName) || 
-                                    (loginUser.getEnglishName() != null && loginUser.getEnglishName().equals(fullName))) {
-                                    nameMatches = true;
-                                }
-                            }
-                        }
+                        boolean nameMatches = isUserNameMatch(loginUser, dbReservation);
                         
                         if (!nameMatches) {
                             log.warn("DB 검증 실패 - 비회원 조회값과 로그인 사용자 불일치");
@@ -472,26 +456,8 @@ public class CheckinController {
                     
                     log.info("사용자 일치 확인 - 로그인 사용자 이름: " + loginUserName + ", 예약 승객명: " + reservationPassengerName);
                     
-                    // 이름 비교 (한국어 이름 또는 영어 이름으로 비교)
-                    boolean nameMatches = false;
-                    if (loginUserName != null && reservationPassengerName != null) {
-                        // 한국어 이름 비교
-                        if (loginUserName.equals(reservationPassengerName)) {
-                            nameMatches = true;
-                        }
-                        // 영어 이름 비교
-                        else if (loginUser.getEnglishName() != null && loginUser.getEnglishName().equals(reservationPassengerName)) {
-                            nameMatches = true;
-                        }
-                        // firstName + lastName 조합 비교 (이미 getFullPassengerName에서 처리됨)
-                        else if (reservation.getFirstName() != null && reservation.getLastName() != null) {
-                            String fullName = reservation.getFirstName() + " " + reservation.getLastName();
-                            if (loginUserName.equals(fullName) || 
-                                (loginUser.getEnglishName() != null && loginUser.getEnglishName().equals(fullName))) {
-                                nameMatches = true;
-                            }
-                        }
-                    }
+                    // 이름 비교 (한국어/영어 이름 매칭)
+                    boolean nameMatches = isUserNameMatch(loginUser, reservation);
                     
                     // 예약의 사용자 이름과 로그인한 사용자 이름이 일치하지 않으면 로그인 페이지로 리다이렉트
                     if (!nameMatches) {
@@ -689,5 +655,98 @@ public class CheckinController {
             log.error("좌석 가격 조회 중 오류 발생", e);
             return ResponseUtils.createSystemErrorResponse("좌석 가격 조회 중 오류가 발생했습니다.");
         }
+    }
+    
+    /**
+     * 로그인 사용자와 예약 정보의 이름 매칭을 검증하는 유틸리티 메서드
+     * 한국어/영어 이름의 다양한 조합을 포괄적으로 비교
+     * 
+     * @param loginUser 로그인한 사용자 정보
+     * @param reservation 예약 정보
+     * @return 이름이 일치하면 true, 그렇지 않으면 false
+     */
+    private boolean isUserNameMatch(org.doit.member.model.User loginUser, ReservationVO reservation) {
+        if (loginUser == null || reservation == null) {
+            return false;
+        }
+        
+        String loginKoreanName = loginUser.getKoreanName();
+        String loginEnglishName = loginUser.getEnglishName();
+        String reservationFirstName = reservation.getFirstName();
+        String reservationLastName = reservation.getLastName();
+        String reservationPassengerName = reservation.getFullPassengerName();
+        
+        log.debug("이름 매칭 검증 시작 - 로그인 한국어명: " + loginKoreanName + 
+                ", 로그인 영어명: " + loginEnglishName + 
+                ", 예약 firstName: " + reservationFirstName + 
+                ", 예약 lastName: " + reservationLastName + 
+                ", 예약 전체명: " + reservationPassengerName);
+        
+        // 1. 한국어 이름과 전체 승객명 비교
+        if (loginKoreanName != null && reservationPassengerName != null && 
+            loginKoreanName.equals(reservationPassengerName)) {
+            log.debug("매칭 성공: 한국어 이름 = 전체 승객명");
+            return true;
+        }
+        
+        // 2. 영어 이름과 전체 승객명 비교
+        if (loginEnglishName != null && reservationPassengerName != null && 
+            loginEnglishName.equals(reservationPassengerName)) {
+            log.debug("매칭 성공: 영어 이름 = 전체 승객명");
+            return true;
+        }
+        
+        // 3. 한국어 이름과 lastName 비교
+        if (loginKoreanName != null && reservationLastName != null && 
+            loginKoreanName.equals(reservationLastName)) {
+            log.debug("매칭 성공: 한국어 이름 = lastName");
+            return true;
+        }
+        
+        // 4. 영어 이름과 firstName 비교
+        if (loginEnglishName != null && reservationFirstName != null && 
+            loginEnglishName.equals(reservationFirstName)) {
+            log.debug("매칭 성공: 영어 이름 = firstName");
+            return true;
+        }
+        
+        // 5. firstName + lastName 조합과 비교
+        if (reservationFirstName != null && reservationLastName != null) {
+            String fullName = reservationFirstName + " " + reservationLastName;
+            
+            // 한국어 이름과 firstName + lastName 조합 비교
+            if (loginKoreanName != null && loginKoreanName.equals(fullName)) {
+                log.debug("매칭 성공: 한국어 이름 = firstName + lastName");
+                return true;
+            }
+            
+            // 영어 이름과 firstName + lastName 조합 비교
+            if (loginEnglishName != null && loginEnglishName.equals(fullName)) {
+                log.debug("매칭 성공: 영어 이름 = firstName + lastName");
+                return true;
+            }
+        }
+        
+        // 6. 공백 제거 후 비교 (공백으로 인한 매칭 실패 방지)
+        if (loginKoreanName != null && reservationPassengerName != null) {
+            String trimmedKorean = loginKoreanName.trim();
+            String trimmedPassenger = reservationPassengerName.trim();
+            if (trimmedKorean.equals(trimmedPassenger)) {
+                log.debug("매칭 성공: 공백 제거 후 한국어 이름 = 전체 승객명");
+                return true;
+            }
+        }
+        
+        if (loginEnglishName != null && reservationPassengerName != null) {
+            String trimmedEnglish = loginEnglishName.trim();
+            String trimmedPassenger = reservationPassengerName.trim();
+            if (trimmedEnglish.equals(trimmedPassenger)) {
+                log.debug("매칭 성공: 공백 제거 후 영어 이름 = 전체 승객명");
+                return true;
+            }
+        }
+        
+        log.debug("이름 매칭 실패 - 모든 조합이 일치하지 않음");
+        return false;
     }
 } 

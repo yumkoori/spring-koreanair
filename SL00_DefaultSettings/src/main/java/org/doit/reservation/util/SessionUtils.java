@@ -28,6 +28,13 @@ public class SessionUtils {
             return lookupResult;
         }
         
+        // reservation 세션 확인 (detail 페이지에서 사용)
+        ReservationVO reservation = (ReservationVO) session.getAttribute("reservation");
+        if (reservation != null && bookingId.equals(reservation.getBookingId())) {
+            log.info("세션에서 예약 정보 조회 성공 - bookingId: " + bookingId);
+            return reservation;
+        }
+        
         log.warn("세션에 예약 정보 없음 - bookingId: " + bookingId);
         return null;
     }

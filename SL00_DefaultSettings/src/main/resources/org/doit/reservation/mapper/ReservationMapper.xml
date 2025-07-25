@@ -58,6 +58,8 @@
             f.arrival_airport_id as arrival_airport_id,
             da.airport_name as departure_airport_name,
             aa.airport_name as arrival_airport_name,
+            DATE(f.departure_time) as departure_date,
+            DATE(f.arrival_time) as arrival_date,
             f.departure_time,
             f.arrival_time,
             u.phone,

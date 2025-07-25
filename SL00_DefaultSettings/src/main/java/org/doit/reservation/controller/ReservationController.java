@@ -186,6 +186,9 @@ public class ReservationController {
                 // 예약변경을 위해 세션에 예약 정보 저장
                 SessionUtils.setReservationToSession(session, reservation, "changeReservation");
                 
+                // 좌석 변경을 위해 세션에 예약 정보 저장
+                SessionUtils.setReservationToSession(session, reservation, "reservation");
+                
                 log.info("예약 상세 정보 조회 성공 - bookingId: " + bookingId);
                 return "reservation/detail"; // 상세 JSP 뷰 반환
             } else {
