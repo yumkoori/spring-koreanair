@@ -53,6 +53,6 @@
     </bean>
 
     <!-- MyBatis Mapper Scanner -->
-    <mybatis-spring:scan base-package="org.doit.ik.mapper, org.doit.member.dao, org.doit.member.mapper, org.doit.admin.mapper, org.doit.payment.mapper, org.doit.reservation.mapper, org.doit.member.mapper, org.doit.reservation.persistence"/>
+    <mybatis-spring:scan base-package="org.doit.ik.mapper, org.doit.member.dao, org.doit.member.mapper, org.doit.admin.mapper, org.doit.payment.mapper, org.doit.reservation.mapper, org.doit.member.mapper, org.doit.reservation.persistence, org.doit.flight.mapper, org.doit.airport.mapper, org.doit.booking.mapper"/>
 
 </beans>

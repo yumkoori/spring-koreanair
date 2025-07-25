@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.flight.mapper.FlightMapper">
+
+<select id="getSearchFlight" resultType="org.doit.flight.dto.FlightSearchResponseDTO">
+  SELECT
+    f.flight_id AS flightId,
+    ac.airline AS airlineName,
+    f.flightNo AS flightNo,  
+    f.departure_time AS departureTime,
+    f.arrival_time AS arrivalTime,
+    TIMESTAMPDIFF(MINUTE, f.departure_time, f.arrival_time) AS durationMinutes,
+    COUNT(fs.seat_id) AS availableSeatCount
+  FROM
+    flight f
+  JOIN aircraft ac ON f.aircraft_id = ac.aircraft_id
+  LEFT JOIN flight_seat fs ON f.flight_id = fs.flight_id AND fs.status = 'AVAILABLE'
+  LEFT JOIN seat_class sc ON sc.class_id = fs.class_id
+  WHERE
+    f.departure_airport_id = #{departure}
+    AND f.arrival_airport_id = #{arrival}
+    AND DATE(f.departure_time) = #{departureDate}
+  GROUP BY
+    f.flight_id, ac.airline, f.flightNo, f.departure_time, f.arrival_time
+  ORDER BY
+    f.departure_time ASC
+</select>
+
+
+
+  
+<select id="getWeekLowPrices" resultType="map">
+  WITH RECURSIVE date_range AS (
+    SELECT DATE(#{departureDate}) - INTERVAL 3 DAY AS target_date
+    UNION ALL
+    SELECT target_date + INTERVAL 1 DAY
+    FROM date_range
+    WHERE target_date + INTERVAL 1 DAY &lt;= DATE(#{departureDate}) + INTERVAL 3 DAY
+  ),
+  ranked_prices AS (
+    SELECT 
+      DATE(f.departure_time) AS flight_date,
+      sp.price,
+      ROW_NUMBER() OVER (PARTITION BY DATE(f.departure_time) ORDER BY sp.price ASC) AS rn
+    FROM flight f
+    JOIN flight_seat fs ON f.flight_id = fs.flight_id
+    JOIN seat_price sp ON fs.flight_id = sp.flight_id AND fs.class_id = sp.class_id
+    WHERE 
+      f.departure_airport_id = #{departure}
+      AND f.arrival_airport_id = #{arrival}
+      AND fs.status = 'AVAILABLE'
+  )
+  SELECT 
+    DATE_FORMAT(d.target_date, '%Y-%m-%d') AS target_date,
+    rp.price AS price
+  FROM date_range d
+  LEFT JOIN ranked_prices rp
+    ON d.target_date = rp.flight_date AND rp.rn = 1
+  ORDER BY d.target_date
+</select>
+
+
+
+  
+</mapper>  

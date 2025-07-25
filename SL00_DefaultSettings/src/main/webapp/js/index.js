@@ -760,3 +760,154 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 }); 
+
+// ========== 출발지/도착지 검색 기능 ==========
+function initAirportSearch() {
+    console.log('공항 검색 기능 초기화 중...');
+    
+    // 공항 데이터
+    const airports = [
+        { code: 'ICN', name: '서울/인천', fullName: '인천국제공항', region: '국내' },
+        { code: 'GMP', name: '서울/김포', fullName: '김포국제공항', region: '국내' },
+        { code: 'PUS', name: '부산', fullName: '김해국제공항', region: '국내' },
+        { code: 'CJU', name: '제주', fullName: '제주국제공항', region: '국내' },
+        { code: 'TAE', name: '대구', fullName: '대구국제공항', region: '국내' },
+        { code: 'KWJ', name: '광주', fullName: '광주공항', region: '국내' },
+        { code: 'USN', name: '울산', fullName: '울산공항', region: '국내' },
+        { code: 'YNY', name: '양양', fullName: '양양국제공항', region: '국내' },
+        { code: 'NRT', name: '도쿄/나리타', fullName: '나리타국제공항', region: '아시아' },
+        { code: 'NRD', name: '도쿄/하네다', fullName: '하네다공항', region: '아시아' },
+        { code: 'KIX', name: '오사카', fullName: '간사이국제공항', region: '아시아' },
+        { code: 'NGO', name: '나고야', fullName: '추부국제공항', region: '아시아' },
+        { code: 'FUK', name: '후쿠오카', fullName: '후쿠오카공항', region: '아시아' },
+        { code: 'PEK', name: '베이징', fullName: '베이징수도국제공항', region: '아시아' },
+        { code: 'PVG', name: '상하이/푸동', fullName: '상하이푸동국제공항', region: '아시아' },
+        { code: 'SHA', name: '상하이/홍교', fullName: '상하이홍교국제공항', region: '아시아' },
+        { code: 'CAN', name: '광저우', fullName: '광저우바이윈국제공항', region: '아시아' },
+        { code: 'HKG', name: '홍콩', fullName: '홍콩국제공항', region: '아시아' },
+        { code: 'TPE', name: '타이베이', fullName: '타오위안국제공항', region: '아시아' },
+        { code: 'BKK', name: '방콕', fullName: '수완나품국제공항', region: '아시아' },
+        { code: 'SIN', name: '싱가포르', fullName: '창이국제공항', region: '아시아' },
+        { code: 'KUL', name: '쿠알라룸푸르', fullName: '쿠알라룸푸르국제공항', region: '아시아' },
+        { code: 'MNL', name: '마닐라', fullName: '니노이 아키노 국제공항', region: '아시아' },
+        { code: 'LAX', name: '로스앤젤레스', fullName: '로스앤젤레스국제공항', region: '미주' },
+        { code: 'SFO', name: '샌프란시스코', fullName: '샌프란시스코국제공항', region: '미주' },
+        { code: 'SEA', name: '시애틀', fullName: '시애틀타코마국제공항', region: '미주' },
+        { code: 'JFK', name: '뉴욕/JFK', fullName: '존F케네디국제공항', region: '미주' },
+        { code: 'LGA', name: '뉴욕/라과디아', fullName: '라과디아공항', region: '미주' },
+        { code: 'ORD', name: '시카고', fullName: '오헤어국제공항', region: '미주' },
+        { code: 'YVR', name: '밴쿠버', fullName: '밴쿠버국제공항', region: '미주' },
+        { code: 'YYZ', name: '토론토', fullName: '피어슨국제공항', region: '미주' },
+        { code: 'LHR', name: '런던/히드로', fullName: '히드로공항', region: '유럽' },
+        { code: 'CDG', name: '파리', fullName: '샤를드골공항', region: '유럽' },
+        { code: 'FRA', name: '프랑크푸르트', fullName: '프랑크푸르트공항', region: '유럽' },
+        { code: 'AMS', name: '암스테르담', fullName: '스키폴공항', region: '유럽' },
+        { code: 'ZUR', name: '취리히', fullName: '취리히공항', region: '유럽' },
+        { code: 'FCO', name: '로마', fullName: '피우미치노공항', region: '유럽' },
+        { code: 'VIE', name: '비엔나', fullName: '비엔나국제공항', region: '유럽' },
+        { code: 'IST', name: '이스탄불', fullName: '이스탄불공항', region: '유럽' }
+    ];
+
+    // 검색 함수
+    function searchAirports(keyword, resultsContainer) {
+        console.log('공항 검색:', keyword);
+        
+        if (!keyword || keyword.length === 0) {
+            resultsContainer.innerHTML = '';
+            return;
+        }
+        
+        const filtered = airports.filter(airport => 
+            airport.code.toLowerCase().includes(keyword.toLowerCase()) ||
+            airport.name.toLowerCase().includes(keyword.toLowerCase()) ||
+            airport.fullName.toLowerCase().includes(keyword.toLowerCase())
+        );
+        
+        console.log('검색 결과:', filtered.length + '개');
+        
+        resultsContainer.innerHTML = '';
+        
+        if (filtered.length === 0) {
+            const noResult = document.createElement('div');
+            noResult.className = 'dropdown-item no-result';
+            noResult.textContent = '검색 결과가 없습니다.';
+            resultsContainer.appendChild(noResult);
+            return;
+        }
+        
+        filtered.forEach(airport => {
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.innerHTML = `
+                <div class="airport-item">
+                    <div class="airport-code">${airport.code}</div>
+                    <div class="airport-info">
+                        <div class="airport-name">${airport.name}</div>
+                        <div class="airport-full-name">${airport.fullName}</div>
+                    </div>
+                </div>
+            `;
+            
+            item.addEventListener('click', function() {
+                const container = resultsContainer.closest('.airport-dropdown');
+                const isDepature = container.id.includes('departure');
+                
+                if (isDepature) {
+                    const departureCode = document.querySelector('.departure .airport-code');
+                    const departureName = document.querySelector('.departure .airport-name');
+                    if (departureCode) departureCode.textContent = airport.code;
+                    if (departureName) departureName.textContent = airport.name;
+                    const departureDropdown = document.getElementById('departure-dropdown');
+                    if (departureDropdown) departureDropdown.style.display = 'none';
+                } else {
+                    const arrivalCode = document.querySelector('.arrival .airport-code');
+                    const arrivalName = document.querySelector('.arrival .airport-name');
+                    if (arrivalCode) arrivalCode.textContent = airport.code;
+                    if (arrivalName) arrivalName.textContent = airport.name;
+                    const arrivalDropdown = document.getElementById('arrival-dropdown');
+                    if (arrivalDropdown) arrivalDropdown.style.display = 'none';
+                }
+                
+                resultsContainer.innerHTML = '';
+            });
+            
+            resultsContainer.appendChild(item);
+        });
+    }
+
+    // 출발지 검색 이벤트
+    const departureSearch = document.querySelector('#departure-search');
+    if (departureSearch) {
+        departureSearch.addEventListener('input', function() {
+            const resultsContainer = document.getElementById('departure-results');
+            if (resultsContainer) {
+                searchAirports(this.value, resultsContainer);
+            }
+        });
+        console.log('출발지 검색 이벤트 설정 완료');
+    } else {
+        console.log('출발지 검색 요소를 찾을 수 없음');
+    }
+
+    // 도착지 검색 이벤트
+    const arrivalSearch = document.querySelector('#arrival-search');
+    if (arrivalSearch) {
+        arrivalSearch.addEventListener('input', function() {
+            const resultsContainer = document.getElementById('arrival-results');
+            if (resultsContainer) {
+                searchAirports(this.value, resultsContainer);
+            }
+        });
+        console.log('도착지 검색 이벤트 설정 완료');
+    } else {
+        console.log('도착지 검색 요소를 찾을 수 없음');
+    }
+}
+
+// 페이지 로드 시 공항 검색 기능 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    initAirportSearch();
+    
+    // 1초 후에도 한 번 더 실행 (동적 요소 로딩 대비)
+    setTimeout(initAirportSearch, 1000);
+}); 

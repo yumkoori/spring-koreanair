@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.booking.mapper.BookingMapper">
+
+<insert id="insertPendingBooking" parameterType="org.doit.booking.dto.BookingDTO">
+    INSERT INTO booking (
+        booking_id,
+        outbound_flight_id,
+        return_flight_id,
+        user_no,
+        promotion_id,
+        booking_pw,
+        expire_time
+    ) VALUES (
+        #{bookingId},
+        #{outboundFlightId},
+        #{returnFlightId},
+        #{userNo, jdbcType=INTEGER},
+        #{promotionId},
+        #{bookingPw},
+        #{expireTime}
+    )
+</insert>
+
+
+<update id="updateNonUserPW" parameterType="map">
+    UPDATE booking
+    SET booking_pw = #{bookingPW}
+    WHERE booking_id = #{bookingId}
+</update>
+
+</mapper>  
