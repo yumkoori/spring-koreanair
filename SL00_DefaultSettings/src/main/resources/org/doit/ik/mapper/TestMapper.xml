@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="org.doit.ik.mapper.TestMapper">
+    
+    <!-- 데이터베이스 연결 테스트 쿼리 -->
+    <select id="getTestValue" resultType="String">
+        SELECT 'MariaDB 연결 성공!' as result
+    </select>
+    
+    <!-- 현재 시간 조회 -->
+    <select id="getCurrentTime" resultType="String">
+        select * from flight_seat
+        where flight_id = 'KE456'
+    </select>
+    
+    <!-- seat_price 테이블 데이터 확인 -->
+    <select id="testSeatPrice" resultType="String">
+        SELECT CONCAT('Total rows: ', COUNT(*), ', Sample data: ', COALESCE(GROUP_CONCAT(CONCAT(class_id, '=', price) LIMIT 3), 'No data')) as result
+        FROM seat_price
+    </select>
+    
+    <!-- 데이터베이스 버전 조회 -->
+    <select id="getDatabaseVersion" resultType="String">
+        SELECT VERSION() as version
+    </select>
+    
+    
+</mapper> 

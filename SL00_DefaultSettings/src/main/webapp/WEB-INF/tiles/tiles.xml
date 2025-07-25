@@ -4,9 +4,11 @@
 	"http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
 	
 <tiles-definitions>
-    
+    <definition>
+    	
+    </definition>
     <!-- home.index -->
-    
+    <!--
     <definition name="home.*"  template="/WEB-INF/views/inc/layout.jsp">
         <put-attribute name="header"  value="/WEB-INF/views/inc/header.jsp" />
         <put-attribute name="content" value="/WEB-INF/views/{1}.jsp" /> 
@@ -14,7 +16,7 @@
         
         <put-attribute name="title"  value="SiSt5 Spring Tiles" />
     </definition>
-    
+    -->
      <!--
     <definition name="*.*"  template="/WEB-INF/views/{1}/inc/layout.jsp">
        <put-attribute name="header" value="/WEB-INF/views/inc/header.jsp"></put-attribute> 
