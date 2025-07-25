@@ -39,8 +39,20 @@
         <!-- Reservation and Checkin pages for non-members -->
         <intercept-url pattern="/reservation/lookup.htm" access="permitAll"/>
         <intercept-url pattern="/reservation/detail.htm" access="permitAll"/>
+        <intercept-url pattern="/reservation/cancel.htm" access="permitAll"/>
+        <intercept-url pattern="/reservation/changeSearch.htm" access="permitAll"/>
+        <intercept-url pattern="/reservation/changeSelect.htm" access="permitAll"/>
+        <intercept-url pattern="/reservation/changeReservationSelect.htm" access="permitAll"/>
+        <intercept-url pattern="/reservation/changeReservationSearch.htm" access="permitAll"/>
+        <intercept-url pattern="/reservation/mylist.htm" access="permitAll"/>
         <intercept-url pattern="/checkin/lookup.htm" access="permitAll"/>
         <intercept-url pattern="/checkin/detail.htm" access="permitAll"/>
+        <intercept-url pattern="/checkin/seat.htm" access="permitAll"/>
+        <intercept-url pattern="/checkin/apply.htm" access="permitAll"/>
+        <intercept-url pattern="/checkin/complete.htm" access="permitAll"/>
+        <intercept-url pattern="/checkin/processDetail.htm" access="permitAll"/>
+        <intercept-url pattern="/checkin/validateSeat.htm" access="permitAll"/>
+        <intercept-url pattern="/checkin/getSeatPrice.htm" access="permitAll"/>
         <intercept-url pattern="/autocomplete.do" access="permitAll"/>
         
         

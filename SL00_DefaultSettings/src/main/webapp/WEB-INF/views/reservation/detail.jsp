@@ -103,16 +103,22 @@
                             <div class="service-items">
                                 <c:choose>
                                     <c:when test="${not empty reservation.assignedSeat}">
-                                        <a href="${pageContext.request.contextPath}/checkin/seat.htm?bookingId=${reservation.bookingId}" class="service-item">
-                                            <i class="fa-solid fa-chair"></i>
-                                            <span>${reservation.assignedSeat} (좌석 변경)</span>
-                                        </a>
+                                        <form action="${pageContext.request.contextPath}/checkin/seat.htm" method="get" style="display: inline;">
+                                            <input type="hidden" name="bookingId" value="${reservation.bookingId}">
+                                            <button type="submit" class="service-item" style="border: none; background: none; cursor: pointer; display: flex; align-items: center; text-decoration: none; color: inherit;">
+                                                <i class="fa-solid fa-chair"></i>
+                                                <span>${reservation.assignedSeat} (좌석 변경)</span>
+                                            </button>
+                                        </form>
                                     </c:when>
                                     <c:otherwise>
-                                        <a href="${pageContext.request.contextPath}/checkin/seat.htm?bookingId=${reservation.bookingId}" class="service-item">
-                                            <i class="fa-solid fa-chair"></i>
-                                            <span>좌석 신청</span>
-                                        </a>
+                                        <form action="${pageContext.request.contextPath}/checkin/seat.htm" method="get" style="display: inline;">
+                                            <input type="hidden" name="bookingId" value="${reservation.bookingId}">
+                                            <button type="submit" class="service-item" style="border: none; background: none; cursor: pointer; display: flex; align-items: center; text-decoration: none; color: inherit;">
+                                                <i class="fa-solid fa-chair"></i>
+                                                <span>좌석 신청</span>
+                                            </button>
+                                        </form>
                                     </c:otherwise>
                                 </c:choose>
                                 <a href="#" id="openServicesModalBtn" class="service-item">

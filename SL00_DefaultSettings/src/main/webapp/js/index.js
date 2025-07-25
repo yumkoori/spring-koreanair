@@ -564,6 +564,65 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // 체크인 AJAX 처리 (메인 페이지에만 존재)
+    const checkinLookupForm = document.querySelector('#checkinLookupForm');
+    if (checkinLookupForm) {
+        checkinLookupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('체크인 폼 제출 이벤트 - AJAX 처리 시작');
+            
+            // 필수 동의 체크
+            const agreeCheckbox = this.querySelector('input[name="agreeInfo"]');
+            if (agreeCheckbox && !agreeCheckbox.checked) {
+                alert('[필수] 항목에 동의해주셔야 체크인이 가능합니다.');
+                return;
+            }
+            
+            // 에러 메시지 숨기기
+            const errorBox = document.getElementById('checkinErrorBox');
+            if (errorBox) errorBox.classList.add('hidden');
+            
+            // AJAX 요청
+            const formData = new FormData(this);
+            console.log('체크인 FormData 생성 완료, AJAX 요청 시작');
+            
+            fetch(window.contextPath + '/checkin/lookup.htm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams(formData)
+            })
+            .then(response => {
+                console.log('체크인 응답 받음:', response);
+                return response.json();
+            })
+            .then(data => {
+                console.log('체크인 JSON 데이터:', data);
+                if (data.success) {
+                    const redirectUrl = window.contextPath + '/' + data.redirectUrl;
+                    console.log('체크인 리다이렉트 URL:', redirectUrl);
+                    window.location.href = redirectUrl;
+                } else {
+                    const errorMessageElement = document.getElementById('checkinErrorMessage');
+                    if (errorBox && errorMessageElement) {
+                        errorMessageElement.textContent = data.error || '알 수 없는 오류가 발생했습니다.';
+                        errorBox.classList.remove('hidden');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('체크인 AJAX 오류:', error);
+                const errorMessageElement = document.getElementById('checkinErrorMessage');
+                if (errorBox && errorMessageElement) {
+                    errorMessageElement.textContent = '체크인 조회 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+                    errorBox.classList.remove('hidden');
+                }
+            });
+        });
+    }
+
     // 페이지 캐시 관련 이벤트 (메인 페이지에만 존재)
     const checkinTab = document.querySelector('#checkin');
     if (checkinTab) {
@@ -594,6 +653,110 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+    }
+
+    // 로그인한 상태에서 예약 상세 페이지로 이동하는 함수
+    window.goToReservationDetail = function(bookingId) {
+        const url = window.contextPath + '/reservation/detail.htm?bookingId=' + bookingId;
+        window.location.href = url;
+    };
+
+    // 로그인한 상태에서 체크인 상세 페이지로 이동하는 함수
+    window.goToCheckinDetail = function(bookingId) {
+        const url = window.contextPath + '/checkin/lookup.htm?bookingId=' + bookingId;
+        window.location.href = url;
+    };
+
+    // 로그인 상태 더보기(예약조회) 버튼 AJAX
+    const loginLookupBtn = document.getElementById('loginLookupBtn');
+    if (loginLookupBtn) {
+        loginLookupBtn.addEventListener('click', function() {
+            const bookingId = this.getAttribute('data-bookingid');
+            const departureDate = this.getAttribute('data-departuredate');
+            const lastName = this.getAttribute('data-lastname');
+            const firstName = this.getAttribute('data-firstname');
+            const errorBox = document.getElementById('bookingErrorBox');
+            if (errorBox) errorBox.classList.add('hidden');
+            fetch(window.contextPath + '/reservation/lookup.htm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({
+                    bookingId,
+                    departureDate,
+                    lastName,
+                    firstName,
+                    agreeInfo: true
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = window.contextPath + '/' + data.redirectUrl;
+                } else {
+                    const errorMessageElement = document.getElementById('bookingErrorMessage');
+                    if (errorBox && errorMessageElement) {
+                        errorMessageElement.textContent = data.error || '알 수 없는 오류가 발생했습니다.';
+                        errorBox.classList.remove('hidden');
+                    }
+                }
+            })
+            .catch(() => {
+                const errorMessageElement = document.getElementById('bookingErrorMessage');
+                if (errorBox && errorMessageElement) {
+                    errorMessageElement.textContent = '조회 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+                    errorBox.classList.remove('hidden');
+                }
+            });
+        });
+    }
+
+    // 로그인 상태 체크인 버튼 AJAX
+    const loginCheckinBtn = document.getElementById('loginCheckinBtn');
+    if (loginCheckinBtn) {
+        loginCheckinBtn.addEventListener('click', function() {
+            const bookingId = this.getAttribute('data-bookingid');
+            const departureDate = this.getAttribute('data-departuredate');
+            const lastName = this.getAttribute('data-lastname');
+            const firstName = this.getAttribute('data-firstname');
+            const errorBox = document.getElementById('checkinErrorBox');
+            if (errorBox) errorBox.classList.add('hidden');
+            fetch(window.contextPath + '/checkin/lookup.htm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({
+                    bookingId,
+                    departureDate,
+                    lastName,
+                    firstName,
+                    agreeInfo: true
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = window.contextPath + '/' + data.redirectUrl;
+                } else {
+                    const errorMessageElement = document.getElementById('checkinErrorMessage');
+                    if (errorBox && errorMessageElement) {
+                        errorMessageElement.textContent = data.error || '알 수 없는 오류가 발생했습니다.';
+                        errorBox.classList.remove('hidden');
+                    }
+                }
+            })
+            .catch(() => {
+                const errorMessageElement = document.getElementById('checkinErrorMessage');
+                if (errorBox && errorMessageElement) {
+                    errorMessageElement.textContent = '체크인 조회 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+                    errorBox.classList.remove('hidden');
+                }
+            });
+        });
     }
 
 }); 

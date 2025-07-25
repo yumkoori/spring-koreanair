@@ -74,7 +74,7 @@
         INNER JOIN airport da ON f.departure_airport_id = da.airport_id
         INNER JOIN airport aa ON f.arrival_airport_id = aa.airport_id
         LEFT JOIN passenger p ON b.booking_id = p.booking_id
-        LEFT JOIN users u ON p.user_no = u.user_no
+        LEFT JOIN users u ON b.user_no = u.user_no
         LEFT JOIN booking_seat bs ON b.booking_id = bs.booking_id
         LEFT JOIN flight_seat fs ON bs.flight_seat_id = fs.seat_id
         LEFT JOIN seat_class sc ON fs.class_id = sc.class_id
@@ -108,8 +108,9 @@
 
     <select id="findByUserId" resultMap="ReservationResultMap">
         <include refid="reservationJoinQuery"/>
-        WHERE b.user_no = #{userId}
-        ORDER BY b.booking_id DESC
+        WHERE b.user_no = #{userId,jdbcType=INTEGER}
+        ORDER BY f.departure_time ASC
+        LIMIT 1
     </select>
 
     <insert id="insertReservation" parameterType="org.doit.reservation.domain.ReservationVO">
@@ -170,7 +171,7 @@
         INNER JOIN airport da ON f.departure_airport_id = da.airport_id
         INNER JOIN airport aa ON f.arrival_airport_id = aa.airport_id
         INNER JOIN passenger p ON b.booking_id = p.booking_id
-        LEFT JOIN users u ON p.user_no = u.user_no
+        LEFT JOIN users u ON b.user_no = u.user_no
         LEFT JOIN booking_seat bs ON b.booking_id = bs.booking_id
         LEFT JOIN flight_seat fs ON bs.flight_seat_id = fs.seat_id
         LEFT JOIN seat_class sc ON fs.class_id = sc.class_id

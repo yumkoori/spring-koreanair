@@ -7,6 +7,8 @@ import org.doit.reservation.domain.CancelReservationVO;
 import org.doit.reservation.persistence.ReservationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 예약 서비스 구현체
@@ -14,6 +16,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class ReservationServiceImpl implements ReservationService {
     
+    private static final Logger log = LoggerFactory.getLogger(ReservationServiceImpl.class);
+
     @Autowired
     private ReservationMapper reservationMapper;
     
@@ -55,10 +59,20 @@ public class ReservationServiceImpl implements ReservationService {
     
     @Override
     public List<ReservationVO> getUserReservations(String userId) {
+        log.info("ReservationServiceImpl.getUserReservations 호출 - userId: " + userId);
         List<ReservationVO> reservations = reservationMapper.findByUserId(userId);
+        log.info("DB 조회 결과 - 예약 수: " + (reservations != null ? reservations.size() : 0));
+        if (reservations != null && !reservations.isEmpty()) {
+            log.info("첫 번째 예약의 user_id: " + reservations.get(0).getUserId());
+        }
         if (reservations != null) {
             for (ReservationVO reservation : reservations) {
-                validateReservation(reservation);
+                try {
+                    validateReservation(reservation);
+                } catch (IllegalArgumentException e) {
+                    log.warn("예약 검증 실패 - bookingId: " + reservation.getBookingId() + ", 에러: " + e.getMessage());
+                    // 검증 실패해도 예약 목록에는 포함시킴
+                }
             }
         }
         return reservations;

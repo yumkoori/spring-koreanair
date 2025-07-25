@@ -163,8 +163,8 @@ public class ReservationController {
                 // 3. 로그인된 사용자의 예약 조회 (또는 세션에 없을 경우 DB에서 재조회)
                 UserVO user = (UserVO) session.getAttribute("user");
                 if (user != null) {
-                    reservation = reservationService.findReservationByIdAndUserId(bookingId, user.getUserId());
-                    log.info("로그인 사용자 예약 정보 조회 - userId: " + user.getUserId());
+                    reservation = reservationService.findReservationByIdAndUserId(bookingId, String.valueOf(user.getId()));
+                    log.info("로그인 사용자 예약 정보 조회 - id: " + user.getId());
                 } else {
                     // 임시: 로그인 검증 없이 DB에서 재조회 (비회원 체크인 지원)
                     log.info("비회원 체크인에서 넘어온 경우 - bookingId: " + bookingId);
