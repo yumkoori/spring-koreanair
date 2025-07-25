@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.payment.mapper.PaymentPrepareMapper">
+
+  <!-- payment 테이블에 결제 정보 저장 -->
+  <insert id="insertPayment" parameterType="map">
+    INSERT INTO payment (payment_id, booking_id, status_code, merchant_uid, imp_uid, payment_method, payment_amount, created_at) 
+    VALUES (#{paymentId}, #{dto.bookingId}, 'READY', #{dto.merchantUid}, 'imp87380624', #{dto.paymentMethod}, #{dto.amount}, #{dto.createdAt})
+  </insert>
+
+  <!-- payment_request_log 테이블의 현재 행 개수 조회 -->
+  <select id="getPaymentRequestLogCount" resultType="int">
+    SELECT COUNT(*) FROM payment_request_log
+  </select>
+
+  <!-- payment_request_log 테이블에 결제 요청 로그 저장 -->
+  <insert id="insertPaymentRequestLog" parameterType="map">
+    INSERT INTO payment_request_log (request_log_id, payment_id, merchant_uid, pay_method, requested_payment_amount, requested_at) 
+    VALUES (#{requestLogId}, #{paymentId}, #{dto.merchantUid}, #{dto.paymentMethod}, #{dto.amount}, #{dto.createdAt})
+  </insert>
+
+</mapper> 
