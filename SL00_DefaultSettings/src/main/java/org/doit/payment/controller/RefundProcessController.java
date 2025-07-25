@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.doit.payment.domain.RefundProcessDTO;
-import org.doit.payment.domain.User;
+import org.doit.member.model.User;
 import org.doit.payment.service.RefundProcessService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -120,7 +120,7 @@ public class RefundProcessController {
         User user = (User) session.getAttribute("user");
         if (user == null) {
             user = new User();
-            user.setUserNo(164); // 테스트용 번호
+            user.setUserNo(180); // 테스트용 번호
             session.setAttribute("user", user);
         }
 

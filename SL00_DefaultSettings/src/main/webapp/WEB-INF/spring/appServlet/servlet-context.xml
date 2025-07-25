@@ -18,8 +18,7 @@
     <!-- Serve static resources -->
     <resources mapping="/css/**" location="/css/"/>
     <resources mapping="/js/**" location="/js/"/>
-    <resources mapping="/images/**" location="/images/"/>
-    <resources mapping="/resources/**" location="/"/>
+    <resources mapping="/resources/**" location="/resources/"/>
 
 
 	<!-- JSON View Resolver for AJAX requests -->
