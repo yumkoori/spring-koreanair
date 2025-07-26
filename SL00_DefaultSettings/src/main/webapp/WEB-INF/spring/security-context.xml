@@ -55,6 +55,17 @@
         <intercept-url pattern="/checkin/getSeatPrice.htm" access="permitAll"/>
         <intercept-url pattern="/autocomplete.do" access="permitAll"/>
         
+        <!-- Flight search API for non-members -->
+        <intercept-url pattern="/api/search/flight" access="permitAll"/>
+        <intercept-url pattern="/api/booking" access="permitAll"/>
+        
+        <!-- Payment pages for non-members -->
+        <intercept-url pattern="/payment/page" access="permitAll"/>
+        <intercept-url pattern="/payment/prepare" access="permitAll"/>
+        <intercept-url pattern="/payment/verify" access="permitAll"/>
+        <intercept-url pattern="/payment/success" access="permitAll"/>
+        <intercept-url pattern="/payment/failure" access="permitAll"/>
+        
         
         <!-- Admin pages -->
         <intercept-url pattern="/admin/**" access="hasRole('ADMIN')"/>
