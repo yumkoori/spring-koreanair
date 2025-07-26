@@ -291,7 +291,7 @@
 						// 현재 선택된 날짜와 비교해서 active 클래스 적용
 						boolean isActive = currentDate.equals(currentSelectedDate);
 				%>
-				<div class="date-price-item <%= isActive ? "active" : "" %>">
+				<div class="date-price-item <%= isActive ? "active" : "" %>" data-date="<%= currentDate %>">
 					<div class="date-day"><%= dayOfMonth %></div>
 					<div class="date-weekday"><%= dayOfWeek %></div>
 					<div class="price-amount"><%= prices[i] %></div>

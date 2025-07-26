@@ -195,6 +195,78 @@ document.addEventListener('DOMContentLoaded', function() {
         // initializeHomePage(); // 주석 처리 - 현재 페이지에서 필요없음
     }
     
+    // 🔥 강제로 주간 바 초기화 (페이지 인식과 무관하게)
+    console.log('🔥 강제로 주간 바 이벤트 설정 시작!');
+    setTimeout(() => {
+        const datePriceItems = document.querySelectorAll('.date-price-item');
+        console.log('🗓️ 강제 주간 바 초기화, 날짜 아이템 수:', datePriceItems.length);
+        
+        if (datePriceItems.length > 0) {
+            console.log('✅ 주간 바 아이템 발견! 이벤트 리스너 설정 중...');
+            
+            datePriceItems.forEach((item, index) => {
+                console.log(`📅 날짜 아이템 ${index + 1}:`, {
+                    date: item.getAttribute('data-date'),
+                    day: item.querySelector('.date-day')?.textContent,
+                    weekday: item.querySelector('.date-weekday')?.textContent,
+                    price: item.querySelector('.price-amount')?.textContent
+                });
+                
+                item.addEventListener('click', function() {
+                    console.log('🖱️ 강제 설정된 주간 바 날짜 클릭됨!');
+                    
+                    // 기존 선택 항목 제거
+                    datePriceItems.forEach(item => item.classList.remove('active'));
+                    
+                    // 현재 항목 선택
+                    this.classList.add('active');
+                    
+                    // data-date 속성에서 정확한 날짜 가져오기
+                    const selectedDate = this.getAttribute('data-date');
+                    const day = this.querySelector('.date-day').textContent;
+                    const weekday = this.querySelector('.date-weekday').textContent;
+                    const price = this.querySelector('.price-amount').textContent;
+                    
+                    console.log(`✅ 선택된 날짜: ${selectedDate} (${day}일, ${weekday}), 가격: ${price}`);
+                    
+                    if (!selectedDate) {
+                        console.error('❌ 선택된 날짜 정보가 없습니다.');
+                        return;
+                    }
+                    
+                    // 현재 URL에서 쿼리 파라미터 가져오기
+                    const urlParams = new URLSearchParams(window.location.search);
+                    
+                    // 원래 기준 날짜 설정 (처음 요청된 날짜를 계속 유지)
+                    let originalDepartureDate = urlParams.get('originalDepartureDate');
+                    if (!originalDepartureDate) {
+                        // 첫 요청인 경우 현재 departureDate를 원래 날짜로 설정
+                        originalDepartureDate = urlParams.get('departureDate');
+                    }
+                    
+                    // 새로운 URL 생성
+                    urlParams.set('departureDate', selectedDate);
+                    urlParams.set('originalDepartureDate', originalDepartureDate); // 원래 기준 날짜 유지
+                    
+                    // 왕복인 경우 returnDate도 동일하게 조정
+                    const tripType = urlParams.get('tripType');
+                    if (tripType === 'round') {
+                        urlParams.set('returnDate', selectedDate);
+                    }
+                    
+                    // 페이지 새로고침으로 새로운 날짜로 검색
+                    const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+                    console.log('🔗 새로운 URL:', newUrl);
+                    window.location.href = newUrl;
+                });
+            });
+            
+            console.log('✅ 강제 주간 바 이벤트 설정 완료!');
+        } else {
+            console.warn('⚠️ 주간 바 아이템을 찾을 수 없습니다.');
+        }
+    }, 500); // 0.5초 후에 실행
+    
     // 🎯 전역 상세보기 버튼 이벤트 설정 함수
     function setupGlobalDetailButtonEvents() {
         console.log('🔧 전역 상세보기 버튼 이벤트 설정 중...');
@@ -222,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 상세보기 버튼 직접 검색 및 이벤트 설정
         function findAndSetupDetailButtons() {
-            const detailButtons = document.querySelectorAll('.details-btn, button:contains("상세 보기")');
+            const detailButtons = document.querySelectorAll('.details-btn');
             console.log('🔍 찾은 상세보기 버튼 개수:', detailButtons.length);
             
             detailButtons.forEach((btn, index) => {
@@ -1272,21 +1344,26 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 검색 결과 페이지 기능 초기화 (search-results.html)
     function initializeSearchResultsPage() {
-        console.log('검색 결과 페이지 초기화');
+        console.log('🚀 검색 결과 페이지 초기화 시작!');
         
         // 날짜 선택 기능 초기화
+        console.log('📅 날짜 선택 기능 초기화...');
         initializeDatePicker();
         
         // 인원수 선택 기능 초기화
+        console.log('👥 인원수 선택 기능 초기화...');
         initializePassengerSelector();
         
         // 좌석 등급 선택 기능 초기화
+        console.log('💺 좌석 등급 선택 기능 초기화...');
         initializeSeatTypeSelector();
         
         // 날짜별 가격 선택 기능 초기화
+        console.log('📊 날짜별 가격 선택 기능(주간 바) 초기화...');
         initializeDatePriceBar();
         
         // 좌석 등급 버튼 기능 초기화
+        console.log('🔘 좌석 등급 버튼 기능 초기화...');
         initializeSeatClassButtons();
         
         // 필터 버튼 기능 초기화
@@ -1934,51 +2011,70 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 날짜별 가격 선택 기능
         function initializeDatePriceBar() {
+            console.log('📊 initializeDatePriceBar 함수 실행 시작!');
             const datePriceItems = document.querySelectorAll('.date-price-item');
+            console.log('🗓️ 주간 바 초기화, 날짜 아이템 수:', datePriceItems.length);
+            
+            if (datePriceItems.length === 0) {
+                console.warn('⚠️ 주간 바 날짜 아이템을 찾을 수 없습니다! DOM이 아직 로드되지 않았을 수 있습니다.');
+                return;
+            }
             
             // 날짜 가격 아이템 클릭 이벤트
-            datePriceItems.forEach(item => {
+            datePriceItems.forEach((item, index) => {
+                console.log(`📅 날짜 아이템 ${index + 1}:`, {
+                    date: item.getAttribute('data-date'),
+                    day: item.querySelector('.date-day')?.textContent,
+                    weekday: item.querySelector('.date-weekday')?.textContent,
+                    price: item.querySelector('.price-amount')?.textContent
+                });
+                
                 item.addEventListener('click', function() {
+                    console.log('🖱️ 주간 바 날짜 클릭됨!');
+                    
                     // 기존 선택 항목 제거
                     datePriceItems.forEach(item => item.classList.remove('active'));
                     
                     // 현재 항목 선택
                     this.classList.add('active');
                     
-                    // 날짜와 요일 정보 가져오기
-                    const day = this.querySelector('.date-day').textContent.padStart(2, '0');
+                    // data-date 속성에서 정확한 날짜 가져오기
+                    const selectedDate = this.getAttribute('data-date');
+                    const day = this.querySelector('.date-day').textContent;
                     const weekday = this.querySelector('.date-weekday').textContent;
                     const price = this.querySelector('.price-amount').textContent;
                     
-                    console.log(`선택된 날짜: ${day}일(${weekday}), 가격: ${price}`);
+                    console.log(`✅ 선택된 날짜: ${selectedDate} (${day}일, ${weekday}), 가격: ${price}`);
+                    
+                    if (!selectedDate) {
+                        console.error('❌ 선택된 날짜 정보가 없습니다.');
+                        return;
+                    }
                     
                     // 현재 URL에서 쿼리 파라미터 가져오기
                     const urlParams = new URLSearchParams(window.location.search);
-                    const currentDepartureDate = urlParams.get('departureDate');
                     
-                    if (currentDepartureDate) {
-                        // 원래 기준 날짜 설정 (처음 요청된 날짜를 계속 유지)
-                        let originalDepartureDate = urlParams.get('originalDepartureDate');
-                        if (!originalDepartureDate) {
-                            // 첫 요청인 경우 현재 departureDate를 원래 날짜로 설정
-                            originalDepartureDate = currentDepartureDate;
-                        }
-                        
-                        // 원래 기준 날짜에서 연도와 월 추출
-                        const [originalYear, originalMonth, originalDay] = originalDepartureDate.split('-');
-                        
-                        // 새로운 날짜 생성 (원래 기준 날짜의 연도/월 사용)
-                        const newDepartureDate = `${originalYear}-${originalMonth}-${day}`;
-                        
-                        // 새로운 URL 생성
-                        urlParams.set('departureDate', newDepartureDate);
-                        urlParams.set('originalDepartureDate', originalDepartureDate); // 원래 기준 날짜 유지
-                        // returnDate는 원래 값을 그대로 유지 (변경하지 않음)
-                        
-                        // 페이지 새로고침으로 새로운 날짜로 검색
-                        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-                        window.location.href = newUrl;
+                    // 원래 기준 날짜 설정 (처음 요청된 날짜를 계속 유지)
+                    let originalDepartureDate = urlParams.get('originalDepartureDate');
+                    if (!originalDepartureDate) {
+                        // 첫 요청인 경우 현재 departureDate를 원래 날짜로 설정
+                        originalDepartureDate = urlParams.get('departureDate');
                     }
+                    
+                    // 새로운 URL 생성
+                    urlParams.set('departureDate', selectedDate);
+                    urlParams.set('originalDepartureDate', originalDepartureDate); // 원래 기준 날짜 유지
+                    
+                    // 왕복인 경우 returnDate도 동일하게 조정
+                    const tripType = urlParams.get('tripType');
+                    if (tripType === 'round') {
+                        urlParams.set('returnDate', selectedDate);
+                    }
+                    
+                    // 페이지 새로고침으로 새로운 날짜로 검색
+                    const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+                    console.log('🔗 새로운 URL:', newUrl);
+                    window.location.href = newUrl;
                 });
             });
             
