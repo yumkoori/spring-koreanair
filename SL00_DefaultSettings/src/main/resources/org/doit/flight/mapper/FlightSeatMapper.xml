@@ -24,4 +24,22 @@
         ORDER BY sc.class_id
     </select>
 
+
+<update id="updateSeatToPending">
+  UPDATE flight_seat
+  SET status = 'PENDING',
+      pending_at = NOW()
+  WHERE flight_id = #{flightId}
+    AND class_id = #{seatClass}
+    AND status = 'AVAILABLE'
+  LIMIT #{totalPassengers}
+</update>
+
+<update id="releaseExpiredPendingSeats">
+  UPDATE flight_seat
+  SET status = 'AVAILABLE',
+      pending_at = NULL
+  WHERE status = 'PENDING'
+    AND TIMESTAMPDIFF(MINUTE, pending_at, NOW()) >= 5
+</update>
 </mapper>

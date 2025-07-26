@@ -57,6 +57,8 @@ public class FlightSearchViewController {
 		
 	    //서비스로 옮기기 
 	    try {
+	    	
+	    	flightSeatService.releaseExpiredPendingSeats();
 	    	//항공편 리스트 가져오기 
 			List<FlightSearchResponseDTO> flights = flightSearchService.searchFlight(requestDTO);
 			
