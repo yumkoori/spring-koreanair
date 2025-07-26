@@ -321,28 +321,18 @@ function processPayment() {
         // 로딩 표시
         showLoadingSpinner();
         
-        // 폼을 생성해서 POST 방식으로 전송 (페이지 이동)
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = window.contextPath + '/testPayment.do';
+        // Payment_Page.jsp로 GET 방식으로 이동 (PaymentController를 통해)
+        const paymentUrl = window.contextPath + '/payment/page' +
+            '?bookingId=' + encodeURIComponent(bookingId) +
+            '&totalAmount=' + encodeURIComponent(totalPrice);
         
-        // bookingId 파라미터 추가
-        const bookingIdInput = document.createElement('input');
-        bookingIdInput.type = 'hidden';
-        bookingIdInput.name = 'bookingId';
-        bookingIdInput.value = bookingId;
-        form.appendChild(bookingIdInput);
+        console.log('💳 결제 페이지로 이동:', paymentUrl);
+        console.log('📝 전달 파라미터:');
+        console.log('- bookingId:', bookingId);
+        console.log('- totalAmount:', totalPrice);
         
-        // totalAmount 파라미터 추가
-        const totalAmountInput = document.createElement('input');
-        totalAmountInput.type = 'hidden';
-        totalAmountInput.name = 'totalAmount';
-        totalAmountInput.value = totalPrice;
-        form.appendChild(totalAmountInput);
-        
-        // 폼을 body에 추가하고 전송
-        document.body.appendChild(form);
-        form.submit();
+        // 페이지 이동
+        window.location.href = paymentUrl;
         
     } catch (error) {
         console.error('❌ processPayment 함수 오류:', error);
