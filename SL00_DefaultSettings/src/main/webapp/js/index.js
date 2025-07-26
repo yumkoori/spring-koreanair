@@ -327,13 +327,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 여행 타입 버튼 기능 (메인 페이지에만 존재)
     const tripTypeBtns = document.querySelectorAll('.trip-type-btn');
+    const returnDateSection = document.getElementById('returnDateSection');
+    
     if (tripTypeBtns.length > 0) {
+    // 초기 상태 설정 (왕복이 기본 선택되어 있으므로 복귀일 표시)
+    updateReturnDateVisibility();
+    
     tripTypeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             tripTypeBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            
+            // 복귀일 섹션 표시/숨김 업데이트
+            updateReturnDateVisibility();
         });
     });
+    
+    // 복귀일 섹션 표시/숨김 함수
+    function updateReturnDateVisibility() {
+        const activeTripBtn = document.querySelector('.trip-type-btn.active');
+        const tripType = activeTripBtn ? activeTripBtn.getAttribute('data-type') : 'round';
+        
+        if (returnDateSection) {
+            if (tripType === 'round') {
+                returnDateSection.style.display = 'block';
+                console.log('왕복 선택 - 복귀일 표시');
+            } else {
+                returnDateSection.style.display = 'none';
+                console.log('편도/다구간 선택 - 복귀일 숨김');
+            }
+        }
+    }
     }
     
     // 상태 버튼 기능 (메인 페이지에만 존재)
@@ -1128,18 +1152,36 @@ if (searchForm) {
         const departureCode = document.querySelector('.departure .airport-code').textContent || 'CJU';
         const arrivalCode = document.querySelector('.arrival .airport-code').textContent || 'GMP';
         
-        // 2. 날짜 값 가져오기 (임시로 기본값 사용)
-        const departureDate = '2025-07-15';
-        const returnDate = '2025-07-16';
+        // 2. 날짜 값 가져오기
+        const departureDateInput = document.getElementById('departureDate');
+        const returnDateInput = document.getElementById('returnDate');
+        const departureDate = departureDateInput ? departureDateInput.value : '2025-07-15';
         
-        // 3. 탑승객 정보 (임시로 기본값 사용)
-        const passengers = '성인 1명';
+        // 5. 여행 타입 가져오기 (날짜 처리를 위해 먼저)
+        const activeTripBtn = document.querySelector('.trip-type-btn.active');
+        const tripType = activeTripBtn ? activeTripBtn.getAttribute('data-type') : 'round';
         
-        // 4. 좌석 등급 (임시로 기본값 사용)
-        const seatClass = '일반석';
+        // 복귀일은 왕복일 경우에만 사용, 편도일 경우 출발일과 동일
+        let returnDate;
+        if (tripType === 'round' && returnDateInput) {
+            returnDate = returnDateInput.value || departureDate;
+        } else {
+            returnDate = departureDate;
+        }
         
-        // 5. 여행 타입 (임시로 기본값 사용)
-        const tripType = 'round';
+        // 3. 탑승객 정보 가져오기
+        const passengerSelect = document.querySelector('.passenger-input select');
+        const passengers = passengerSelect ? passengerSelect.value : '성인 1명';
+        console.log('선택된 승객 정보:', passengers);
+        
+        // 4. 좌석 등급 가져오기
+        const seatClassSelect = document.querySelector('.class-input select');
+        let seatClass = seatClassSelect ? seatClassSelect.value : '일반석';
+        // "선택하세요"가 선택된 경우 기본값 사용
+        if (seatClass === '선택하세요') {
+            seatClass = '일반석';
+        }
+        console.log('선택된 좌석 등급:', seatClass);
         
         console.log('검색 조건:', {
             departure: departureCode,

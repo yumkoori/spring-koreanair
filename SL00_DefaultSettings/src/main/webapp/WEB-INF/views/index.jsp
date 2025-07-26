@@ -174,6 +174,20 @@
         .airport-input:hover {
             background-color: #f8f9fa;
         }
+        
+        /* 복귀일 입력 필드 스타일 */
+        .date-section {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .date-input {
+            flex: 1;
+        }
+        
+        .return-date {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
     </style>
 </head>
 <body class="airline-main-body">
@@ -249,7 +263,11 @@
                         <div class="date-section">
                             <div class="date-input">
                                 <label>출발일</label>
-                                <input type="date" value="2025-05-28">
+                                <input type="date" value="2025-07-15" id="departureDate">
+                            </div>
+                            <div class="date-input return-date" id="returnDateSection">
+                                <label>복귀일</label>
+                                <input type="date" value="2025-07-16" id="returnDate">
                             </div>
                         </div>
                         
@@ -531,7 +549,7 @@
                             </div>
                             <div class="date-input">
                                 <label>출발일</label>
-                                <input type="date" value="2025-05-28">
+                                <input type="date" value="2025-07-15">
                             </div>
                             <div class="search-section">
                                 <button class="search-flights-btn">조회</button>
