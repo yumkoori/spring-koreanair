@@ -23,6 +23,7 @@
 	rel="stylesheet">
 </head>
 <body class="airline-main-body">
+    <jsp:include page="../common/header.jsp" />
 
 <script>
     window.contextPath = "${pageContext.request.contextPath}";

@@ -9,6 +9,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>항공권 예약 - 대한항공</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/index.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/booking/booking.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -47,6 +48,7 @@
     </script>
 </head>
 <body>
+    <jsp:include page="../common/header.jsp" />
 
     <main class="booking-container">
         <!-- 진행 단계 표시 -->
