@@ -2,6 +2,12 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
+<head>
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+
 <style>
 /* /src/main/webapp/css/checkinApply.css */
 @charset "UTF-8";
@@ -237,7 +243,7 @@ body {
     color: #0064de;
 }
 </style>
-
+<jsp:include page="../common/header.jsp" />
 <main class="page-container">
     <div class="page-header">
         <h1>온라인 체크인</h1>
@@ -307,7 +313,7 @@ body {
         </div>
     </form>
 </main>
-
+<jsp:include page="../common/footer.jsp" />
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const applyForm = document.getElementById('applyForm');

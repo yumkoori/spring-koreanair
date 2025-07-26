@@ -10,11 +10,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>예약취소 - 대한항공</title>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/index.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<%= contextPath %>/resources/css/cancelReservation.css">
 </head>
 <body>
+	<jsp:include page="../common/header.jsp" />
 	<div class="cancel-page">
 		<div class="container">
 			<h1>예약취소</h1>
@@ -102,5 +104,6 @@
 	</div>
 	
 	<script src="<%= contextPath %>/resources/js/cancelReservation.js"></script>
+	<jsp:include page="../common/footer.jsp" />
 </body>
 </html> 

@@ -40,7 +40,88 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         List<ReservationVO> userBookings = reservationService.getUserReservations(String.valueOf(user.getUserNo()));
         session.setAttribute("userBookings", userBookings);
         
-        // 저장된 targetUrl이 있는지 확인
+        // 취소 대기 중인 예약이 있는지 확인
+        String pendingBookingId = (String) session.getAttribute("pendingCancelBookingId");
+        ReservationVO pendingReservation = (ReservationVO) session.getAttribute("pendingCancelReservation");
+        
+        if (pendingBookingId != null && pendingReservation != null) {
+            System.out.println("DEBUG: 취소 대기 중인 예약 발견 - bookingId: " + pendingBookingId);
+            
+            // 이름 일치 여부 확인
+            boolean nameMatches = isUserNameMatch(user, pendingReservation);
+            
+            // 세션 정리
+            session.removeAttribute("pendingCancelBookingId");
+            session.removeAttribute("pendingCancelReservation");
+            
+            if (nameMatches) {
+                // 일치: 취소 페이지로
+                System.out.println("DEBUG: 이름 일치 - 취소 페이지로 리다이렉트");
+                response.sendRedirect(request.getContextPath() + "/reservation/cancel.htm?bookingId=" + pendingBookingId);
+                return;
+            } else {
+                // 불일치: 대시보드로
+                System.out.println("DEBUG: 이름 불일치 - 대시보드로 리다이렉트");
+                response.sendRedirect(request.getContextPath() + "/dashboard");
+                return;
+            }
+        }
+        
+        // 좌석선택 대기 중인 예약이 있는지 확인
+        String pendingSeatBookingId = (String) session.getAttribute("pendingSeatBookingId");
+        ReservationVO pendingSeatReservation = (ReservationVO) session.getAttribute("pendingSeatReservation");
+        
+        if (pendingSeatBookingId != null && pendingSeatReservation != null) {
+            System.out.println("DEBUG: 좌석선택 대기 중인 예약 발견 - bookingId: " + pendingSeatBookingId);
+            
+            // 이름 일치 여부 확인
+            boolean nameMatches = isUserNameMatch(user, pendingSeatReservation);
+            
+            // 세션 정리
+            session.removeAttribute("pendingSeatBookingId");
+            session.removeAttribute("pendingSeatReservation");
+            
+            if (nameMatches) {
+                // 일치: 좌석선택 페이지로
+                System.out.println("DEBUG: 이름 일치 - 좌석선택 페이지로 리다이렉트");
+                response.sendRedirect(request.getContextPath() + "/checkin/seat.htm?bookingId=" + pendingSeatBookingId);
+                return;
+            } else {
+                // 불일치: 대시보드로
+                System.out.println("DEBUG: 이름 불일치 - 대시보드로 리다이렉트");
+                response.sendRedirect(request.getContextPath() + "/dashboard");
+                return;
+            }
+        }
+        
+        // 예약변경 대기 중인 예약이 있는지 확인
+        String pendingChangeBookingId = (String) session.getAttribute("pendingChangeBookingId");
+        ReservationVO pendingChangeReservation = (ReservationVO) session.getAttribute("pendingChangeReservation");
+        
+        if (pendingChangeBookingId != null && pendingChangeReservation != null) {
+            System.out.println("DEBUG: 예약변경 대기 중인 예약 발견 - bookingId: " + pendingChangeBookingId);
+            
+            // 이름 일치 여부 확인
+            boolean nameMatches = isUserNameMatch(user, pendingChangeReservation);
+            
+            // 세션 정리
+            session.removeAttribute("pendingChangeBookingId");
+            session.removeAttribute("pendingChangeReservation");
+            
+            if (nameMatches) {
+                // 일치: 예약변경 선택 페이지로
+                System.out.println("DEBUG: 이름 일치 - 예약변경 선택 페이지로 리다이렉트");
+                response.sendRedirect(request.getContextPath() + "/reservation/changeReservationSelect.htm?bookingId=" + pendingChangeBookingId);
+                return;
+            } else {
+                // 불일치: 대시보드로
+                System.out.println("DEBUG: 이름 불일치 - 대시보드로 리다이렉트");
+                response.sendRedirect(request.getContextPath() + "/dashboard");
+                return;
+            }
+        }
+        
+        // 저장된 targetUrl이 있는지 확인 (기존 좌석선택 로직)
         String targetUrl = (String) session.getAttribute("targetUrl");
         System.out.println("targetUrl 세션 확인: " + targetUrl);
         if (targetUrl != null && targetUrl.contains("/checkin/seat.htm")) {
@@ -124,5 +205,89 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             return url.substring(startIndex, endIndex);
         }
         return null;
+    }
+    
+    /**
+     * 로그인 사용자와 예약 정보의 이름 매칭을 검증하는 유틸리티 메서드
+     */
+    private boolean isUserNameMatch(User loginUser, ReservationVO reservation) {
+        if (loginUser == null || reservation == null) {
+            return false;
+        }
+        
+        String loginKoreanName = loginUser.getKoreanName();
+        String loginEnglishName = loginUser.getEnglishName();
+        String reservationPassengerName = reservation.getFullPassengerName();
+        
+        System.out.println("DEBUG: 이름 매칭 검증 - 로그인 한국어명: " + loginKoreanName + 
+                ", 로그인 영어명: " + loginEnglishName + 
+                ", 예약 승객명: " + reservationPassengerName);
+        
+        // 1. 한국어 이름과 전체 승객명 비교
+        if (loginKoreanName != null && reservationPassengerName != null && 
+            loginKoreanName.equals(reservationPassengerName)) {
+            System.out.println("DEBUG: 매칭 성공: 한국어 이름 = 전체 승객명");
+            return true;
+        }
+        
+        // 2. 영어 이름과 전체 승객명 비교
+        if (loginEnglishName != null && reservationPassengerName != null && 
+            loginEnglishName.equals(reservationPassengerName)) {
+            System.out.println("DEBUG: 매칭 성공: 영어 이름 = 전체 승객명");
+            return true;
+        }
+        
+        // 3. 한국어 이름과 lastName 비교
+        if (loginKoreanName != null && reservation.getLastName() != null && 
+            loginKoreanName.equals(reservation.getLastName())) {
+            System.out.println("DEBUG: 매칭 성공: 한국어 이름 = lastName");
+            return true;
+        }
+        
+        // 4. 영어 이름과 firstName 비교
+        if (loginEnglishName != null && reservation.getFirstName() != null && 
+            loginEnglishName.equals(reservation.getFirstName())) {
+            System.out.println("DEBUG: 매칭 성공: 영어 이름 = firstName");
+            return true;
+        }
+        
+        // 5. firstName + lastName 조합과 비교
+        if (reservation.getFirstName() != null && reservation.getLastName() != null) {
+            String fullName = reservation.getFirstName() + " " + reservation.getLastName();
+            
+            // 한국어 이름과 firstName + lastName 조합 비교
+            if (loginKoreanName != null && loginKoreanName.equals(fullName)) {
+                System.out.println("DEBUG: 매칭 성공: 한국어 이름 = firstName + lastName");
+                return true;
+            }
+            
+            // 영어 이름과 firstName + lastName 조합 비교
+            if (loginEnglishName != null && loginEnglishName.equals(fullName)) {
+                System.out.println("DEBUG: 매칭 성공: 영어 이름 = firstName + lastName");
+                return true;
+            }
+        }
+        
+        // 6. 공백 제거 후 비교 (공백으로 인한 매칭 실패 방지)
+        if (loginKoreanName != null && reservationPassengerName != null) {
+            String trimmedKorean = loginKoreanName.trim();
+            String trimmedPassenger = reservationPassengerName.trim();
+            if (trimmedKorean.equals(trimmedPassenger)) {
+                System.out.println("DEBUG: 매칭 성공: 공백 제거 후 한국어 이름 = 전체 승객명");
+                return true;
+            }
+        }
+        
+        if (loginEnglishName != null && reservationPassengerName != null) {
+            String trimmedEnglish = loginEnglishName.trim();
+            String trimmedPassenger = reservationPassengerName.trim();
+            if (trimmedEnglish.equals(trimmedPassenger)) {
+                System.out.println("DEBUG: 매칭 성공: 공백 제거 후 영어 이름 = 전체 승객명");
+                return true;
+            }
+        }
+        
+        System.out.println("DEBUG: 이름 매칭 실패 - 모든 조합이 일치하지 않음");
+        return false;
     }
 }

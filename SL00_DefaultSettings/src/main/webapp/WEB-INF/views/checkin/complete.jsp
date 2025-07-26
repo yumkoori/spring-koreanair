@@ -10,8 +10,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>체크인 완료 - 대한항공</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/index.css">
+
 <style>
 body {
     background-color: #f4f7fb;
@@ -172,6 +174,7 @@ body {
 }
 </style>
 </head>
+<jsp:include page="../common/header.jsp" />
 <body>
     <div class="complete-container">
         <div class="complete-header">
@@ -230,4 +233,5 @@ body {
         </div>
     </div>
 </body>
+<jsp:include page="../common/footer.jsp" />
 </html> 

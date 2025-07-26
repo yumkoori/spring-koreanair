@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-<%-- <jsp:include page="/views/common/header.jsp" /> --%>
+	<jsp:include page="../common/header.jsp" />
 
 <c:choose>
     <c:when test="${not empty reservation}">
@@ -239,6 +239,8 @@
 <%-- <jsp:include page="/views/common/footer.jsp" /> --%>
 
 <script src="${pageContext.request.contextPath}/resources/js/reservationDetail.js"></script>
+
+<jsp:include page="../common/footer.jsp" />
 
 </body>
 </html> 
