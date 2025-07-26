@@ -380,104 +380,118 @@ public class CheckinController {
         log.info("좌석 선택 페이지 요청 - bookingId: " + bookingId);
         
         try {
-            // 로그인한 사용자 확인 (로그인 없이도 접근 허용)
+            // 로그인한 사용자 확인
             Object user = session.getAttribute("user");
             log.info("사용자 로그인 상태: " + (user != null ? "로그인됨" : "비로그인"));
             
-            // 세션에서 예약 정보 가져오기
-            ReservationVO reservation = SessionUtils.getReservationFromSession(session, bookingId);
-            
-            // 세션에 예약 정보가 없으면 DB에서 조회하여 세션에 저장
-            if (reservation == null) {
-                log.info("세션에 예약 정보 없음 - DB에서 조회: " + bookingId);
-                // 예약상세페이지에서 넘어온 경우를 위해 더 정확한 조회
-                reservation = reservationService.findReservationById(bookingId);
+            if (user == null) {
+                // 비로그인 상태: 예약 정보를 세션에 저장하고 로그인 페이지로
+                ReservationVO reservation = reservationService.findReservationById(bookingId);
                 if (reservation != null) {
-                    SessionUtils.setReservationToSession(session, reservation, "checkinReservation");
-                    log.info("예약 정보를 세션에 저장: " + bookingId);
+                    session.setAttribute("pendingSeatBookingId", bookingId);
+                    session.setAttribute("pendingSeatReservation", reservation);
+                    redirectAttributes.addFlashAttribute("message", "좌석 선택을 위해 로그인이 필요합니다.");
+                    return "redirect:/login";
                 } else {
-                    log.warn("예약 정보를 찾을 수 없음 - bookingId: " + bookingId);
+                    log.warn("예약 정보 조회 실패 - bookingId: " + bookingId);
                     redirectAttributes.addFlashAttribute("error", "잘못된 접근입니다.");
                     return "redirect:/checkin/lookup.htm";
                 }
-            }
-            
-            // 로그인한 사용자와 예약 정보 일치 확인 (로그인된 경우에만)
-            if (user != null && user instanceof org.doit.member.model.User) {
-                org.doit.member.model.User loginUser = (org.doit.member.model.User) user;
+            } else {
+                // 로그인 상태: 기존 로직 수행
+                // 세션에서 예약 정보 가져오기
+                ReservationVO reservation = SessionUtils.getReservationFromSession(session, bookingId);
                 
-                // 비회원 조회 후 좌석 선택인 경우 DB에서 비회원 조회값과 로그인 사용자값 비교
-                ReservationVO lookupResult = (ReservationVO) session.getAttribute("lookupResult");
-                log.info("=== 비회원 조회 세션 확인 ===");
-                log.info("lookupResult 세션 존재: " + (lookupResult != null));
-                if (lookupResult != null) {
-                    log.info("lookupResult bookingId: " + lookupResult.getBookingId());
-                    log.info("현재 요청 bookingId: " + bookingId);
-                    log.info("bookingId 일치: " + bookingId.equals(lookupResult.getBookingId()));
+                // 세션에 예약 정보가 없으면 DB에서 조회하여 세션에 저장
+                if (reservation == null) {
+                    log.info("세션에 예약 정보 없음 - DB에서 조회: " + bookingId);
+                    // 예약상세페이지에서 넘어온 경우를 위해 더 정확한 조회
+                    reservation = reservationService.findReservationById(bookingId);
+                    if (reservation != null) {
+                        SessionUtils.setReservationToSession(session, reservation, "checkinReservation");
+                        log.info("예약 정보를 세션에 저장: " + bookingId);
+                    } else {
+                        log.warn("예약 정보를 찾을 수 없음 - bookingId: " + bookingId);
+                        redirectAttributes.addFlashAttribute("error", "잘못된 접근입니다.");
+                        return "redirect:/checkin/lookup.htm";
+                    }
                 }
-                if (lookupResult != null && bookingId.equals(lookupResult.getBookingId())) {
-                    log.info("비회원 조회 후 좌석 선택 - DB 검증 시작");
+                
+                // 로그인한 사용자와 예약 정보 일치 확인 (로그인된 경우에만)
+                if (user instanceof org.doit.member.model.User) {
+                    org.doit.member.model.User loginUser = (org.doit.member.model.User) user;
                     
-                    // DB에서 예약 정보 조회하여 비교
-                    ReservationVO dbReservation = reservationService.findReservationByIdAndDateAndFullName(
-                        lookupResult.getBookingId(),
-                        lookupResult.getDepartureDate(),
-                        lookupResult.getLastName(),
-                        lookupResult.getFirstName()
-                    );
-                    
-                    if (dbReservation != null) {
-                        // 로그인한 사용자와 DB의 예약 정보 비교
-                        String loginUserName = loginUser.getKoreanName();
-                        String dbPassengerName = dbReservation.getFullPassengerName();
+                    // 비회원 조회 후 좌석 선택인 경우 DB에서 비회원 조회값과 로그인 사용자값 비교
+                    ReservationVO lookupResult = (ReservationVO) session.getAttribute("lookupResult");
+                    log.info("=== 비회원 조회 세션 확인 ===");
+                    log.info("lookupResult 세션 존재: " + (lookupResult != null));
+                    if (lookupResult != null) {
+                        log.info("lookupResult bookingId: " + lookupResult.getBookingId());
+                        log.info("현재 요청 bookingId: " + bookingId);
+                        log.info("bookingId 일치: " + bookingId.equals(lookupResult.getBookingId()));
+                    }
+                    if (lookupResult != null && bookingId.equals(lookupResult.getBookingId())) {
+                        log.info("비회원 조회 후 좌석 선택 - DB 검증 시작");
                         
-                        log.info("DB 검증 - 로그인 사용자: " + loginUserName + ", DB 예약 승객명: " + dbPassengerName);
-                        log.info("DB 검증 - firstName: " + dbReservation.getFirstName() + ", lastName: " + dbReservation.getLastName());
-                        log.info("DB 검증 - 로그인 사용자 영어명: " + loginUser.getEnglishName());
+                        // DB에서 예약 정보 조회하여 비교
+                        ReservationVO dbReservation = reservationService.findReservationByIdAndDateAndFullName(
+                            lookupResult.getBookingId(),
+                            lookupResult.getDepartureDate(),
+                            lookupResult.getLastName(),
+                            lookupResult.getFirstName()
+                        );
                         
-                        boolean nameMatches = isUserNameMatch(loginUser, dbReservation);
-                        
-                        if (!nameMatches) {
-                            log.warn("DB 검증 실패 - 비회원 조회값과 로그인 사용자 불일치");
-                            redirectAttributes.addFlashAttribute("error", "해당 예약의 사용자만 좌석을 선택할 수 있습니다.");
-                            return "redirect:/dashboard";
+                        if (dbReservation != null) {
+                            // 로그인한 사용자와 DB의 예약 정보 비교
+                            String loginUserName = loginUser.getKoreanName();
+                            String dbPassengerName = dbReservation.getFullPassengerName();
+                            
+                            log.info("DB 검증 - 로그인 사용자: " + loginUserName + ", DB 예약 승객명: " + dbPassengerName);
+                            log.info("DB 검증 - firstName: " + dbReservation.getFirstName() + ", lastName: " + dbReservation.getLastName());
+                            log.info("DB 검증 - 로그인 사용자 영어명: " + loginUser.getEnglishName());
+                            
+                            boolean nameMatches = isUserNameMatch(loginUser, dbReservation);
+                            
+                            if (!nameMatches) {
+                                log.warn("DB 검증 실패 - 비회원 조회값과 로그인 사용자 불일치");
+                                redirectAttributes.addFlashAttribute("error", "해당 예약의 사용자만 좌석을 선택할 수 있습니다.");
+                                return "redirect:/dashboard";
+                            } else {
+                                log.info("DB 검증 성공 - 비회원 조회값과 로그인 사용자 일치");
+                            }
                         } else {
-                            log.info("DB 검증 성공 - 비회원 조회값과 로그인 사용자 일치");
+                            log.warn("DB에서 예약 정보를 찾을 수 없음");
+                            redirectAttributes.addFlashAttribute("error", "예약 정보를 찾을 수 없습니다.");
+                            return "redirect:/dashboard";
                         }
                     } else {
-                        log.warn("DB에서 예약 정보를 찾을 수 없음");
-                        redirectAttributes.addFlashAttribute("error", "예약 정보를 찾을 수 없습니다.");
-                        return "redirect:/dashboard";
-                    }
-                } else {
-                    // 일반적인 경우 이름 검증 수행
-                    String loginUserName = loginUser.getKoreanName(); // 로그인한 사용자의 한국어 이름
-                    String reservationPassengerName = reservation.getFullPassengerName(); // 예약의 승객명 (firstName + lastName)
-                    
-                    log.info("사용자 일치 확인 - 로그인 사용자 이름: " + loginUserName + ", 예약 승객명: " + reservationPassengerName);
-                    
-                    // 이름 비교 (한국어/영어 이름 매칭)
-                    boolean nameMatches = isUserNameMatch(loginUser, reservation);
-                    
-                    // 예약의 사용자 이름과 로그인한 사용자 이름이 일치하지 않으면 로그인 페이지로 리다이렉트
-                    if (!nameMatches) {
-                        log.warn("사용자 불일치 - 로그인 사용자 이름: " + loginUserName + ", 예약 승객명: " + reservationPassengerName);
-                        redirectAttributes.addFlashAttribute("error", "해당 예약의 사용자만 좌석을 선택할 수 있습니다.");
-                        return "redirect:/login";
+                        // 일반적인 경우 이름 검증 수행
+                        String loginUserName = loginUser.getKoreanName(); // 로그인한 사용자의 한국어 이름
+                        String reservationPassengerName = reservation.getFullPassengerName(); // 예약의 승객명 (firstName + lastName)
+                        
+                        log.info("사용자 일치 확인 - 로그인 사용자 이름: " + loginUserName + ", 예약 승객명: " + reservationPassengerName);
+                        
+                        // 이름 비교 (한국어/영어 이름 매칭)
+                        boolean nameMatches = isUserNameMatch(loginUser, reservation);
+                        
+                        // 예약의 사용자 이름과 로그인한 사용자 이름이 일치하지 않으면 로그인 페이지로 리다이렉트
+                        if (!nameMatches) {
+                            log.warn("사용자 불일치 - 로그인 사용자 이름: " + loginUserName + ", 예약 승객명: " + reservationPassengerName);
+                            redirectAttributes.addFlashAttribute("error", "해당 예약의 사용자만 좌석을 선택할 수 있습니다.");
+                            return "redirect:/login";
+                        }
                     }
                 }
-            } else {
-                log.info("비로그인 사용자 - 사용자 검증 생략");
+                
+                // 선택된 좌석 목록 조회 추가
+                List<String> occupiedSeats = checkinService.getOccupiedSeats(reservation.getFlightId());
+                
+                model.addAttribute("reservation", reservation);
+                model.addAttribute("occupiedSeats", occupiedSeats);
+                
+                log.info("좌석 선택 페이지 로드 성공 - bookingId: " + bookingId);
+                return "checkin/seat";
             }
-            
-            // 선택된 좌석 목록 조회 추가
-            List<String> occupiedSeats = checkinService.getOccupiedSeats(reservation.getFlightId());
-            
-            model.addAttribute("reservation", reservation);
-            model.addAttribute("occupiedSeats", occupiedSeats);
-            
-            log.info("좌석 선택 페이지 로드 성공 - bookingId: " + bookingId);
-            return "checkin/seat";
             
         } catch (Exception e) {
             log.error("좌석 선택 페이지 로드 중 오류 발생", e);
@@ -517,14 +531,15 @@ public class CheckinController {
             // 로그인한 사용자와 예약 정보 일치 확인 (로그인된 경우에만)
             if (user != null && user instanceof org.doit.member.model.User) {
                 org.doit.member.model.User loginUser = (org.doit.member.model.User) user;
-                String loginUserId = loginUser.getUserId();
-                String reservationUserId = reservation.getUserId();
                 
-                log.info("사용자 일치 확인 - 로그인 사용자: " + loginUserId + ", 예약 사용자: " + reservationUserId);
+                log.info("좌석 저장 - 사용자 일치 확인 시작");
                 
-                // 예약의 사용자 ID와 로그인한 사용자 ID가 일치하지 않으면 로그인 페이지로 리다이렉트
-                if (!loginUserId.equals(reservationUserId)) {
-                    log.warn("사용자 불일치 - 로그인 사용자: " + loginUserId + ", 예약 사용자: " + reservationUserId);
+                // 이름 비교 (한국어/영어 이름 매칭)
+                boolean nameMatches = isUserNameMatch(loginUser, reservation);
+                
+                // 예약의 사용자 이름과 로그인한 사용자 이름이 일치하지 않으면 로그인 페이지로 리다이렉트
+                if (!nameMatches) {
+                    log.warn("좌석 저장 - 사용자 불일치 - 로그인 사용자와 예약 승객 정보 불일치");
                     redirectAttributes.addFlashAttribute("error", "해당 예약의 사용자만 좌석을 선택할 수 있습니다.");
                     return "redirect:/login";
                 }

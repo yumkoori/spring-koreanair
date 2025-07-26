@@ -13,8 +13,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<%= contextPath %>/resources/css/checkinSeat.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/index.css">
 </head>
 <body>
+	<jsp:include page="../common/header.jsp" />
 	<div class="checkin-page-container">
 		<form id="seatForm" action="<%= contextPath %>/checkin/seat.htm"
 			method="POST">
@@ -87,5 +89,7 @@
 			</c:forEach>
 		</c:if>
 	</script>
+	<jsp:include page="../common/footer.jsp" />
 </body>
+
 </html> 

@@ -8,6 +8,7 @@ import org.doit.reservation.domain.CancelReservationVO;
 import org.doit.reservation.service.ReservationService;
 import org.doit.reservation.util.SessionUtils;
 import org.doit.reservation.util.ResponseUtils;
+import org.doit.member.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -249,27 +250,45 @@ public class ReservationController {
         log.info("예약취소 폼 페이지 요청 - bookingId: " + bookingId);
         
         try {
-            // 예약취소 정보 조회 (위약금, 환불 정보 포함)
-            CancelReservationVO cancelInfo = reservationService.getCancelReservationInfo(bookingId, null);
+            // 로그인 상태 확인
+            User user = (User) session.getAttribute("user");
             
-            if (cancelInfo == null) {
-                log.warn("예약취소 정보 조회 실패 - bookingId: " + bookingId);
-                redirectAttributes.addFlashAttribute("error", "취소할 예약 정보를 찾을 수 없습니다.");
-                return "redirect:/reservation/lookup.htm";
+            if (user == null) {
+                // 비로그인 상태: 예약 정보를 세션에 저장하고 로그인 페이지로
+                ReservationVO reservation = reservationService.findReservationById(bookingId);
+                if (reservation != null) {
+                    session.setAttribute("pendingCancelBookingId", bookingId);
+                    session.setAttribute("pendingCancelReservation", reservation);
+                    redirectAttributes.addFlashAttribute("message", "예약 취소를 위해 로그인이 필요합니다.");
+                    return "redirect:/login";
+                } else {
+                    log.warn("예약 정보 조회 실패 - bookingId: " + bookingId);
+                    redirectAttributes.addFlashAttribute("error", "취소할 예약 정보를 찾을 수 없습니다.");
+                    return "redirect:/reservation/lookup.htm";
+                }
+            } else {
+                // 로그인 상태: 기존 로직 수행
+                CancelReservationVO cancelInfo = reservationService.getCancelReservationInfo(bookingId, null);
+                
+                if (cancelInfo == null) {
+                    log.warn("예약취소 정보 조회 실패 - bookingId: " + bookingId);
+                    redirectAttributes.addFlashAttribute("error", "취소할 예약 정보를 찾을 수 없습니다.");
+                    return "redirect:/reservation/lookup.htm";
+                }
+                
+                // 디버깅 로그 추가
+                log.info("예약취소 정보 조회 성공 - bookingId: " + bookingId);
+                log.info("cancelInfo: " + cancelInfo);
+                log.info("baseFare: " + cancelInfo.getBaseFare());
+                log.info("penaltyFee: " + cancelInfo.getPenaltyFee());
+                log.info("totalRefundAmount: " + cancelInfo.getTotalRefundAmount());
+                
+                // Model에 데이터 전달
+                model.addAttribute("cancelInfo", cancelInfo);
+                
+                log.info("예약취소 폼 페이지 로드 성공 - bookingId: " + bookingId);
+                return "reservation/cancel";
             }
-            
-            // 디버깅 로그 추가
-            log.info("예약취소 정보 조회 성공 - bookingId: " + bookingId);
-            log.info("cancelInfo: " + cancelInfo);
-            log.info("baseFare: " + cancelInfo.getBaseFare());
-            log.info("penaltyFee: " + cancelInfo.getPenaltyFee());
-            log.info("totalRefundAmount: " + cancelInfo.getTotalRefundAmount());
-            
-            // Model에 데이터 전달
-            model.addAttribute("cancelInfo", cancelInfo);
-            
-            log.info("예약취소 폼 페이지 로드 성공 - bookingId: " + bookingId);
-            return "reservation/cancel";
             
         } catch (Exception e) {
             log.error("예약취소 폼 페이지 로드 중 오류 발생", e);
@@ -335,7 +354,32 @@ public class ReservationController {
         log.info("예약변경 선택 페이지 요청 - bookingId: " + bookingId);
         
         try {
-            // 세션에서 예약 정보 가져오기
+            // 로그인한 사용자 확인
+            Object user = session.getAttribute("user");
+            log.info("사용자 로그인 상태: " + (user != null ? "로그인됨" : "비로그인"));
+            
+            // 비로그인 상태인 경우
+            if (user == null) {
+                log.info("비로그인 상태 - 예약 정보를 세션에 저장하고 로그인 페이지로 리다이렉트");
+                
+                // 예약 정보 조회
+                ReservationVO reservation = reservationService.findReservationById(bookingId);
+                if (reservation == null) {
+                    log.warn("예약 정보 조회 실패 - bookingId: " + bookingId);
+                    redirectAttributes.addFlashAttribute("error", "예약 정보를 찾을 수 없습니다.");
+                    return "redirect:/reservation/lookup.htm";
+                }
+                
+                // 세션에 예약 정보 저장
+                session.setAttribute("pendingChangeBookingId", bookingId);
+                session.setAttribute("pendingChangeReservation", reservation);
+                
+                redirectAttributes.addFlashAttribute("message", "예약 변경을 위해 로그인이 필요합니다.");
+                log.info("예약 정보 세션 저장 완료 - bookingId: " + bookingId);
+                return "redirect:/login";
+            }
+            
+            // 로그인 상태인 경우 - 기존 로직 수행
             ReservationVO reservation = (ReservationVO) session.getAttribute("changeReservation");
             if (reservation == null || !bookingId.equals(reservation.getBookingId())) {
                 log.warn("세션에 예약 정보 없음 - bookingId: " + bookingId);

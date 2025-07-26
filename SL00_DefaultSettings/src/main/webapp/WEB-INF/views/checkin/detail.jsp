@@ -13,9 +13,10 @@
 	href="${pageContext.request.contextPath}/resources/css/index.css">
 <link rel="stylesheet"
 	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/index.css">
 </head>
 <body>
-	<%-- <jsp:include page="/views/common/header.jsp" /> --%>
+	<jsp:include page="../common/header.jsp" />
 
 	<main class="page-container">
 		<div class="page-header">
@@ -98,6 +99,6 @@
 			<p>예약 정보를 불러올 수 없습니다.</p>
 		</c:if>
 	</main>
-	<%-- <jsp:include page="/views/common/footer.jsp" /> --%>
+	<jsp:include page="../common/footer.jsp" />
 </body>
 </html> 
