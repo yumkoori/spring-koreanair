@@ -1,4 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="org.doit.member.model.User" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
@@ -642,10 +643,9 @@
                             
                             <%
                                 // 세션에서 사용자 정보 확인
-                                //HttpSession userSession = request.getSession();
-                                //com.koreanair.model.dto.User user = (com.koreanair.model.dto.User) userSession.getAttribute("user");
+                                User user = (User) session.getAttribute("user");
                                 
-                                //if (user == null) {
+                                if (user == null) {
                                     // 비회원인 경우 비밀번호 등록 필드 표시
                             %>
                             <!-- 비회원 비밀번호 등록 -->
@@ -689,7 +689,26 @@
                                 </div>
                             </div>
                             <%
-                               // }
+                                } else {
+                                    // 회원인 경우 로그인된 사용자 정보 표시
+                            %>
+                            <!-- 회원 정보 표시 -->
+                            <div class="member-info-section">
+                                <h4 class="member-section-title">
+                                    <i class="fas fa-user"></i>
+                                    회원 정보
+                                </h4>
+                                <div class="member-info-display">
+                                    <p class="member-name">
+                                        <strong><%= user.getKoreanName() %></strong>님으로 예약됩니다.
+                                    </p>
+                                    <p class="member-email">
+                                        이메일: <%= user.getEmail() %>
+                                    </p>
+                                </div>
+                            </div>
+                            <%
+                                }
                             %>
                         </div>
                     </form>

@@ -1036,6 +1036,52 @@ header {
     min-width: 14px;
 }
 
+/* 회원 정보 섹션 */
+.member-info-section {
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 1px solid #e9ecef;
+}
+
+.member-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.member-section-title i {
+    color: #28a745;
+    font-size: 16px;
+}
+
+.member-info-display {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.member-name {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.member-name strong {
+    color: #0064de;
+    font-weight: 600;
+}
+
+.member-email {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
     .guest-password-section .form-grid {
@@ -1059,5 +1105,17 @@ header {
     
     .password-notice-inline .notice-item {
         font-size: 12px;
+    }
+    
+    .member-info-display {
+        padding: 15px;
+    }
+    
+    .member-name {
+        font-size: 15px;
+    }
+    
+    .member-email {
+        font-size: 13px;
     }
 }
