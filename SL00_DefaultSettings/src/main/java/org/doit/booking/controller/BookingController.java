@@ -4,6 +4,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.servlet.http.HttpSession;
+
 import org.doit.booking.service.BookingService;
 import org.doit.flight.service.FlightSeatService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,7 @@ public class BookingController {
 			@RequestParam(value = "seatClass" , required = false) String seatClass,
 			@RequestParam(value = "outboundSeatClass", required = false) String outboundSeatClass,
 			@RequestParam(value = "returnSeatClass", required = false) String returnSeatClass,
+			HttpSession session,
 			Model model) {
 		
 		String text = passengers;
@@ -63,9 +66,11 @@ public class BookingController {
 			flightSeatService.updateSeatStatusToPending(returnFlightId, returnSeatClass, totalPassengers);
 		}
 		
-		String bookingId = bookingService.savePendingBooking(outboundFlightId, returnFlightId);
+		String bookingId = bookingService.savePendingBooking(outboundFlightId, returnFlightId, session);
 		
-
+		System.out.print("저장된 부킹 아이디 : !!!!!!!!!!!!!!!!!!!!");
+		System.out.println(bookingId);
+		
 		model.addAttribute("bookingId", bookingId);
 		model.addAttribute("outBookingId", outboundFlightId);
 		model.addAttribute("returnBookingId", returnFlightId);
