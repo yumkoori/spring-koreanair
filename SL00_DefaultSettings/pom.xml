@@ -359,6 +359,20 @@
     <version>3.3.1</version>
 </dependency>
 
+	<!-- 8. Mail Support -->
+	<dependency>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-context-support</artifactId>
+		<version>${org.springframework-version}</version>
+	</dependency>
+	
+	<!-- JavaMail API -->
+	<dependency>
+		<groupId>com.sun.mail</groupId>
+		<artifactId>javax.mail</artifactId>
+		<version>1.6.2</version>
+	</dependency>
+
 	</dependencies>
     <build>
         <plugins>

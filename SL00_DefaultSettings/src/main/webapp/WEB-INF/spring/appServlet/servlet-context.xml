@@ -35,6 +35,9 @@
 	
 	<default-servlet-handler/>
 
+	<!-- Property Source Configuration -->
+	<context:property-placeholder location="classpath:application.properties"/>
+
 	<!-- Component Scan for Controllers -->
 	<context:component-scan base-package="org.doit"/>
 

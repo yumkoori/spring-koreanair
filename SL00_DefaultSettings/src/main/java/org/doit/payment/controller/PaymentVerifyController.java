@@ -3,7 +3,9 @@ package org.doit.payment.controller;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.doit.member.model.User;
 import org.doit.payment.domain.PaymentVerifyDTO;
+import org.doit.payment.service.EmailService;
 import org.doit.payment.service.PaymentVerifyService;
 import org.doit.payment.util.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,9 @@ public class PaymentVerifyController {
 
     @Autowired
     private PaymentVerifyService paymentVerifyService;
+    
+    @Autowired
+    private EmailService emailService;
 
     /**
      * 결제 검증 처리
@@ -72,6 +77,9 @@ public class PaymentVerifyController {
                 
                 System.out.println("결제 검증 및 DB 업데이트 성공 - imp_uid: " + impUid + ", merchant_uid: " + merchantUid);
                 
+                // 결제 완료 이메일 전송
+                sendPaymentConfirmationEmail(session, paymentInfo);
+                
                 return "/payment/success";
             } else {
                 // DB 업데이트 실패 시
@@ -96,4 +104,34 @@ public class PaymentVerifyController {
     public String paymentSuccess() throws Exception {
 		return "/";
 	}
+    
+    /**
+     * 결제 완료 이메일 전송 메서드
+     * @param session HTTP 세션
+     * @param paymentInfo 결제 정보
+     */
+    private void sendPaymentConfirmationEmail(HttpSession session, PaymentVerifyDTO paymentInfo) {
+        try {
+            // 세션에서 사용자 정보 가져오기
+            User user = (User) session.getAttribute("user");
+            
+            if (user != null && user.getEmail() != null && !user.getEmail().trim().isEmpty()) {
+                String userEmail = user.getEmail();
+                
+                // 이메일 전송
+                emailService.sendPaymentConfirmationEmail(userEmail, paymentInfo);
+                
+                System.out.println("결제 완료 이메일 전송 성공 - 수신자: " + userEmail + 
+                                 ", 주문번호: " + paymentInfo.getMerchantUid());
+                
+            } else {
+                System.out.println("이메일 전송 건너뛰기 - 사용자 정보 없음 또는 이메일 주소 없음");
+            }
+            
+        } catch (Exception e) {
+            // 이메일 전송 실패해도 결제 프로세스는 계속 진행
+            System.err.println("결제 완료 이메일 전송 중 오류 발생: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 } 
