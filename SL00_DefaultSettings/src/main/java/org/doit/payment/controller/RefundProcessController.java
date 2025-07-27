@@ -31,6 +31,7 @@ public class RefundProcessController {
     public String refundProcessPage(
             @RequestParam(value = "bookingId", required = true) String bookingId,
             @RequestParam(value = "passengerName", required = false) String passengerName,
+            @RequestParam(value = "bookingPw", required = false) String bookingPw,
             Model model) {
         
         // 파라미터를 Model에 설정하여 JSP에서 사용할 수 있도록 함
@@ -39,6 +40,9 @@ public class RefundProcessController {
         }
         if (passengerName != null) {
             model.addAttribute("passengerName", passengerName);
+        }
+        if (bookingPw != null) {
+            model.addAttribute("bookingPw", bookingPw);
         }
 
         // 환불 확인 JSP 페이지로 포워딩
@@ -50,47 +54,57 @@ public class RefundProcessController {
      */
     @RequestMapping(value = "/process", method = RequestMethod.POST, produces = "application/json; charset=UTF-8")
     @ResponseBody
-    public Map<String, Object> refundProcess(
+    public String refundProcess(
             @RequestParam("bookingId") String bookingId,
             @RequestParam(value = "refundReason", required = false) String refundReason,
+            @RequestParam(value = "bookingPw", required = false) String bookingPw,
             HttpServletRequest request) {
 
         Map<String, Object> result = new HashMap<>();
         
-        //나중에 복구
-     /*   try {
+        
+        try {
             // 1. 세션에서 사용자 정보 가져오기
             HttpSession session = request.getSession(false);
-            if (session == null) {
-                return "{\"success\": false, \"message\": \"세션이 만료되었습니다. 다시 로그인해주세요.\"}";
+            User user = null;
+            Integer userNo = null;
+            
+            if (session != null) {
+                user = (User) session.getAttribute("user");
+                if (user != null) {
+                    userNo = user.getUserNo();
+                }
             }
-
-            User user = (User) session.getAttribute("user");
-            if (user == null) {
-                return "{\"success\": false, \"message\": \"사용자 정보가 없습니다. 다시 로그인해주세요.\"}";
-            }
-
-            int userNo = user.getUserNo();
 
             // 2. 입력값 검증
             if (bookingId == null || bookingId.trim().isEmpty()) {
                 return "{\"success\": false, \"message\": \"예약번호가 누락되었습니다.\"}";
             }
 
-            System.out.println("[DEBUG] 환불 요청 - BookingId: " + bookingId + ", UserNo: " + userNo);
+            System.out.println("[DEBUG] 환불 요청 - BookingId: " + bookingId + ", UserNo: " + userNo + ", BookingPw: " + (bookingPw != null ? "제공됨" : "미제공"));
 
-            // 3. 위변조 검사를 위한 DTO 생성
-            RefundProcessDTO validationDto = new RefundProcessDTO(bookingId, userNo);
+            // 3. 위변조 검사를 위한 DTO 생성 및 검증
+            String merchantUid;
+            if (userNo != null) {
+                // 회원인 경우 기존 로직
+                RefundProcessDTO validationDto = new RefundProcessDTO(bookingId, userNo);
+                merchantUid = refundProcessService.validateRefundRequest(validationDto);
+            } else {
+                // 비회원인 경우 bookingPw로 검증
+                if (bookingPw == null || bookingPw.trim().isEmpty()) {
+                    return "{\"success\": false, \"message\": \"비회원 예약의 경우 예약 비밀번호가 필요합니다.\"}";
+                }
+                RefundProcessDTO validationDto = new RefundProcessDTO(bookingId, bookingPw);
+                merchantUid = refundProcessService.validateNonMemberRefundRequest(validationDto);
+            }
 
-            // 4. 위변조 검사 수행
-            String merchantUid = refundProcessService.validateRefundRequest(validationDto);
-
-            // 5. 환불 처리를 위한 DTO 생성 (amount는 실제로는 DB에서 조회해야 함)
+            // 4. 환불 처리를 위한 DTO 생성 (amount는 실제로는 DB에서 조회해야 함)
             String amount = getRefundAmount(merchantUid);
-            RefundProcessDTO refundDto = new RefundProcessDTO(bookingId, merchantUid, userNo, amount,
+            RefundProcessDTO refundDto = new RefundProcessDTO(bookingId, merchantUid, 
+                    userNo != null ? userNo : 0, amount,
                     refundReason != null ? refundReason : "사용자 요청");
 
-            // 6. 환불 처리 실행
+            // 5. 환불 처리 실행
             boolean refundSuccess = refundProcessService.processRefund(refundDto);
 
             if (refundSuccess) {
@@ -110,60 +124,8 @@ public class RefundProcessController {
             e.printStackTrace(); // 디버깅을 위해 스택 트레이스 출력
             return "{\"success\": false, \"message\": \"환불 처리 중 시스템 오류가 발생했습니다.\"}";
         }
-    }*/
+    }
         
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            session = request.getSession(true); // 새 세션 생성
-        }
-
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
-            user = new User();
-            user.setUserNo(180); // 테스트용 번호
-            session.setAttribute("user", user);
-        }
-
-        try {
-            int userNo = user.getUserNo();
-
-            if (bookingId == null || bookingId.trim().isEmpty()) {
-                result.put("success", false);
-                result.put("message", "예약번호가 누락되었습니다.");
-            	return result;
-            }
-
-            System.out.println("[DEBUG] 환불 요청 - BookingId: " + bookingId + ", UserNo: " + userNo);
-
-            RefundProcessDTO validationDto = new RefundProcessDTO(bookingId, userNo);
-            String merchantUid = refundProcessService.validateRefundRequest(validationDto);
-
-            String amount = getRefundAmount(merchantUid);
-            RefundProcessDTO refundDto = new RefundProcessDTO(
-                bookingId, merchantUid, userNo, amount,
-                refundReason != null ? refundReason : "사용자 요청"
-            );
-
-            boolean refundSuccess = refundProcessService.processRefund(refundDto);
-
-            result.put("success", refundSuccess);
-            result.put("message", refundSuccess
-            		? "환불이 성공적으로 처리되었습니다."
-            		: "환불 처리 중 오류가 발생했습니다.");
-            return result;
-
-        } catch (IllegalArgumentException e) {
-        	result.put("success", false);
-            result.put("message", e.getMessage());
-            return result;
-        } catch (Exception e) {
-            System.err.println("[SYSTEM ERROR] 환불 처리 중 오류 발생: " + e.getMessage());
-            e.printStackTrace();
-            result.put("success", false);
-            result.put("message", "환불 처리 중 시스템 오류가 발생했습니다.");
-            return result;
-        }
-    } 
 
     /**
      * merchant_uid로 환불 금액 조회

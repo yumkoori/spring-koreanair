@@ -6,11 +6,18 @@ import org.doit.payment.domain.RefundProcessDTO;
 public interface RefundProcessMapper {
 	
 	/**
-	 * booking_id와 user_no로 위변조 검사 후 merchant_uid 조회
+	 * booking_id와 user_no로 위변조 검사 후 merchant_uid 조회 (회원)
 	 * @param dto 환불 처리 정보 (bookingId, userNo)
 	 * @return merchant_uid
 	 */
 	String validateAndGetMerchantUid(@Param("dto") RefundProcessDTO dto);
+	
+	/**
+	 * booking_id와 booking_pw로 위변조 검사 후 merchant_uid 조회 (비회원)
+	 * @param dto 환불 처리 정보 (bookingId, bookingPw)
+	 * @return merchant_uid
+	 */
+	String validateAndGetMerchantUidForNonMember(@Param("dto") RefundProcessDTO dto);
 	
 	/**
 	 * merchant_uid로 결제 상태 업데이트

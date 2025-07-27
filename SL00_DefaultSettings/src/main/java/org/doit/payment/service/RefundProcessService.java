@@ -46,6 +46,28 @@ public class RefundProcessService {
     }
 
     /**
+     * 비회원 위변조 검사를 수행하고 merchant_uid를 반환
+     * @param dto 환불 검증 정보 (bookingId, bookingPw)
+     * @return merchant_uid (위변조 검사 통과시), null (위변조 검사 실패시)
+     * @throws Exception 검사 중 발생하는 예외
+     */
+    public String validateNonMemberRefundRequest(RefundProcessDTO dto) throws Exception {
+        // 1. 파라미터 유효성 검증
+        validateNonMemberRefundParameters(dto);
+        
+        // 2. Mapper를 통해 위변조 검사 및 merchant_uid 조회
+        String merchantUid = refundProcessMapper.validateAndGetMerchantUidForNonMember(dto);
+        
+        if (merchantUid == null) {
+            System.out.println("[VALIDATION FAILED] 비회원 위변조 검사 실패 - BookingId: " + dto.getBookingId());
+            throw new IllegalArgumentException("유효하지 않은 예약정보입니다. 예약번호와 예약 비밀번호를 확인해주세요.");
+        }
+        
+        System.out.println("[VALIDATION SUCCESS] 비회원 위변조 검사 통과 - MerchantUid: " + merchantUid);
+        return merchantUid;
+    }
+
+    /**
      * 환불 처리를 수행 (아임포트 API 호출 및 상태 업데이트)
      * @param dto 환불 처리 정보
      * @return 환불 처리 성공 여부
@@ -289,6 +311,31 @@ public class RefundProcessService {
         }
         
         System.out.println("[VALIDATION] 환불 파라미터 검증 완료 - BookingId: " + bookingId + ", UserNo: " + userNo);
+    }
+
+    /**
+     * 비회원 환불 요청 파라미터 유효성 검증
+     * @param dto 검증할 DTO 객체
+     * @throws IllegalArgumentException 유효하지 않은 입력값인 경우
+     */
+    private void validateNonMemberRefundParameters(RefundProcessDTO dto) throws IllegalArgumentException {
+        if (dto == null) {
+            throw new IllegalArgumentException("환불 요청 정보가 누락되었습니다.");
+        }
+        
+        // 예약번호 검증
+        String bookingId = dto.getBookingId();
+        if (bookingId == null || bookingId.trim().isEmpty()) {
+            throw new IllegalArgumentException("예약번호가 누락되었습니다.");
+        }
+        
+        // 예약 비밀번호 검증
+        String bookingPw = dto.getBookingPw();
+        if (bookingPw == null || bookingPw.trim().isEmpty()) {
+            throw new IllegalArgumentException("예약 비밀번호가 누락되었습니다.");
+        }
+        
+        System.out.println("[VALIDATION] 비회원 환불 파라미터 검증 완료 - BookingId: " + bookingId);
     }
 
     /**
