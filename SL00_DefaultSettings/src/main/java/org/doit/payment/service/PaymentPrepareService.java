@@ -45,34 +45,28 @@ public class PaymentPrepareService {
      */
     @Transactional
     public boolean savePaymentInfo(PaymentPrepareDTO dto) throws Exception {
-        try {
-            // 1. payment_id 생성
-            String paymentId = "PAY_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-            
-            // 2. payment 테이블에 저장
-            int paymentResult = paymentPrepareMapper.insertPayment(dto, paymentId);
-            
-            if (paymentResult <= 0) {
-                throw new Exception("payment 테이블 저장에 실패했습니다.");
-            }
-            
-            // 3. request_log_id 생성을 위한 현재 행 개수 조회
-            int nextRequestLogId = paymentPrepareMapper.getPaymentRequestLogCount() + 1;
-            
-            // 4. payment_request_log 테이블에 저장
-            int logResult = paymentPrepareMapper.insertPaymentRequestLog(nextRequestLogId, paymentId, dto);
-            
-            if (logResult <= 0) {
-                throw new Exception("payment_request_log 테이블 저장에 실패했습니다.");
-            }
-            
-            System.out.println("[SUCCESS] 결제 정보 및 로그 저장 성공 - PaymentId: " + paymentId + ", MerchantUid: " + dto.getMerchantUid());
-            return true;
-            
-        } catch (Exception e) {
-            System.err.println("[ERROR] 결제 정보 저장 중 오류 발생 - MerchantUid: " + dto.getMerchantUid() + ", Error: " + e.getMessage());
-            throw new Exception("결제 정보 저장 중 오류가 발생했습니다: " + e.getMessage(), e);
+        // 1. payment_id 생성
+        String paymentId = "PAY_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        
+        // 2. payment 테이블에 저장
+        int paymentResult = paymentPrepareMapper.insertPayment(dto, paymentId);
+        
+        if (paymentResult <= 0) {
+            throw new Exception("payment 테이블 저장에 실패했습니다.");
         }
+        
+        // 3. request_log_id 생성을 위한 현재 행 개수 조회
+        int nextRequestLogId = paymentPrepareMapper.getPaymentRequestLogCount() + 1;
+        
+        // 4. payment_request_log 테이블에 저장
+        int logResult = paymentPrepareMapper.insertPaymentRequestLog(nextRequestLogId, paymentId, dto);
+        
+        if (logResult <= 0) {
+            throw new Exception("payment_request_log 테이블 저장에 실패했습니다.");
+        }
+        
+        System.out.println("결제 정보 및 로그 저장 성공 - PaymentId: " + paymentId + ", MerchantUid: " + dto.getMerchantUid());
+        return true;
     }
 
     /**
@@ -115,7 +109,7 @@ public class PaymentPrepareService {
             throw new IllegalArgumentException("생성시간이 누락되었습니다.");
         }
         
-        System.out.println("[VALIDATION] 파라미터 검증 완료 - MerchantUid: " + merchantUid);
+        System.out.println("파라미터 검증 완료 - MerchantUid: " + merchantUid);
     }
     
     /**
@@ -132,7 +126,7 @@ public class PaymentPrepareService {
             if (amountValue > 10000000) { // 1천만원 한도
                 throw new IllegalArgumentException("결제금액이 한도를 초과했습니다. (최대 10,000,000원)");
             }
-            System.out.println("[VALIDATION] 결제금액 검증 완료 - Amount: " + amount);
+            System.out.println("결제금액 검증 완료 - Amount: " + amount);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("결제금액 형식이 올바르지 않습니다.");
         }

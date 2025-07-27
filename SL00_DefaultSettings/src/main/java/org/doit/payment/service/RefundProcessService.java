@@ -36,12 +36,12 @@ public class RefundProcessService {
         String merchantUid = refundProcessMapper.validateAndGetMerchantUid(dto);
         
         if (merchantUid == null) {
-            System.out.println("[VALIDATION FAILED] 위변조 검사 실패 - BookingId: " + dto.getBookingId() + 
+            System.out.println("위변조 검사 실패 - BookingId: " + dto.getBookingId() + 
                              ", UserNo: " + dto.getUserNo());
             throw new IllegalArgumentException("유효하지 않은 예약정보입니다. 예약번호와 사용자 정보를 확인해주세요.");
         }
         
-        System.out.println("[VALIDATION SUCCESS] 위변조 검사 통과 - MerchantUid: " + merchantUid);
+        System.out.println("위변조 검사 통과 - MerchantUid: " + merchantUid);
         return merchantUid;
     }
 
@@ -59,11 +59,11 @@ public class RefundProcessService {
         String merchantUid = refundProcessMapper.validateAndGetMerchantUidForNonMember(dto);
         
         if (merchantUid == null) {
-            System.out.println("[VALIDATION FAILED] 비회원 위변조 검사 실패 - BookingId: " + dto.getBookingId());
+            System.out.println("비회원 위변조 검사 실패 - BookingId: " + dto.getBookingId());
             throw new IllegalArgumentException("유효하지 않은 예약정보입니다. 예약번호와 예약 비밀번호를 확인해주세요.");
         }
         
-        System.out.println("[VALIDATION SUCCESS] 비회원 위변조 검사 통과 - MerchantUid: " + merchantUid);
+        System.out.println("비회원 위변조 검사 통과 - MerchantUid: " + merchantUid);
         return merchantUid;
     }
 
@@ -75,42 +75,32 @@ public class RefundProcessService {
      */
     @Transactional
     public boolean processRefund(RefundProcessDTO dto) throws Exception {
-        try {
-            // 1. 아임포트 API 호출하여 환불 처리
-            boolean refundSuccess = callIamportRefundAPI(dto.getMerchantUid(), dto.getAmount());
+        // 1. 아임포트 API 호출하여 환불 처리
+        boolean refundSuccess = callIamportRefundAPI(dto.getMerchantUid(), dto.getAmount());
+        
+        if (refundSuccess) {
+            // 2. 환불 성공 시 상태 업데이트
+            int statusUpdateSuccess = refundProcessMapper.updateRefundStatus(dto.getMerchantUid(), "CANCELLED");
             
-            if (refundSuccess) {
-                // 2. 환불 성공 시 상태 업데이트
-                int statusUpdateSuccess = refundProcessMapper.updateRefundStatus(dto.getMerchantUid(), "CANCELLED");
-                
-                // 3. 환불 성공 시 booking 상태 업데이트
-                int bookingUpdateSuccess = refundProcessMapper.updateBookingStatus(dto);
-                
-                if (statusUpdateSuccess > 0 && bookingUpdateSuccess > 0) {
-                    System.out.println("[SUCCESS] 환불 처리 완료 - MerchantUid: " + dto.getMerchantUid());
-                    return true;
-                } else {
-                    if (statusUpdateSuccess <= 0) {
-                        System.err.println("[WARNING] 환불은 성공했으나 payment 상태 업데이트 실패 - MerchantUid: " + dto.getMerchantUid());
-                    }
-                    if (bookingUpdateSuccess <= 0) {
-                        System.err.println("[WARNING] 환불은 성공했으나 booking 상태 업데이트 실패 - BookingId: " + dto.getBookingId());
-                    }
-                    return false;
-                }
+            // 3. 환불 성공 시 booking 상태 업데이트
+            int bookingUpdateSuccess = refundProcessMapper.updateBookingStatus(dto);
+            
+            if (statusUpdateSuccess > 0 && bookingUpdateSuccess > 0) {
+                System.out.println("환불 처리 완료 - MerchantUid: " + dto.getMerchantUid());
+                return true;
             } else {
-                // 환불 실패 시 별도 DB 상태 업데이트 없이 false 반환만 수행
-                System.err.println("[FAILED] 환불 처리 실패 - MerchantUid: " + dto.getMerchantUid());
+                if (statusUpdateSuccess <= 0) {
+                    System.out.println("환불은 성공했으나 payment 상태 업데이트 실패 - MerchantUid: " + dto.getMerchantUid());
+                }
+                if (bookingUpdateSuccess <= 0) {
+                    System.out.println("환불은 성공했으나 booking 상태 업데이트 실패 - BookingId: " + dto.getBookingId());
+                }
                 return false;
             }
-            
-        } catch (SQLException e) {
-            System.err.println("[DB ERROR] 환불 처리 중 데이터베이스 오류 발생 - MerchantUid: " + dto.getMerchantUid() + ", Error: " + e.getMessage());
-            throw new Exception("데이터베이스 연결 또는 쿼리 실행 중 오류가 발생했습니다.", e);
-            
-        } catch (Exception e) {
-            System.err.println("[SYSTEM ERROR] 환불 처리 중 시스템 오류 발생 - MerchantUid: " + dto.getMerchantUid() + ", Error: " + e.getMessage());
-            throw new Exception("환불 처리 중 예상치 못한 오류가 발생했습니다: " + e.getMessage(), e);
+        } else {
+            // 환불 실패 시 별도 DB 상태 업데이트 없이 false 반환만 수행
+            System.out.println("환불 처리 실패 - MerchantUid: " + dto.getMerchantUid());
+            return false;
         }
     }
 
@@ -122,29 +112,23 @@ public class RefundProcessService {
      * @throws Exception API 호출 중 발생하는 예외
      */
     private boolean callIamportRefundAPI(String merchantUid, String amount) throws Exception {
-        try {
-            System.out.println("[IAMPORT API] 환불 요청 시작 - MerchantUid: " + merchantUid + ", Amount: " + amount);
-            
-            // 1. 아임포트 액세스 토큰 발급
-            String accessToken = getIamportAccessToken();
-            if (accessToken == null) {
-                throw new Exception("아임포트 액세스 토큰 발급 실패");
-            }
-            
-            // 2. 환불 API 호출
-            boolean refundResult = requestRefund(accessToken, merchantUid, amount);
-            
-            if (refundResult) {
-                System.out.println("[IAMPORT API] 환불 처리 성공 - MerchantUid: " + merchantUid);
-                return true;
-            } else {
-                System.err.println("[IAMPORT API] 환불 처리 실패 - MerchantUid: " + merchantUid);
-                return false;
-            }
-            
-        } catch (Exception e) {
-            System.err.println("[IAMPORT API ERROR] 환불 API 호출 실패 - MerchantUid: " + merchantUid + ", Error: " + e.getMessage());
-            throw new Exception("아임포트 환불 API 호출 중 오류가 발생했습니다.", e);
+        System.out.println("환불 요청 시작 - MerchantUid: " + merchantUid + ", Amount: " + amount);
+        
+        // 1. 아임포트 액세스 토큰 발급
+        String accessToken = getIamportAccessToken();
+        if (accessToken == null) {
+            throw new Exception("아임포트 액세스 토큰 발급 실패");
+        }
+        
+        // 2. 환불 API 호출
+        boolean refundResult = requestRefund(accessToken, merchantUid, amount);
+        
+        if (refundResult) {
+            System.out.println("환불 처리 성공 - MerchantUid: " + merchantUid);
+            return true;
+        } else {
+            System.out.println("환불 처리 실패 - MerchantUid: " + merchantUid);
+            return false;
         }
     }
     
@@ -267,7 +251,7 @@ public class RefundProcessService {
                             String status = statusMatcher.group(1);
                             return "cancelled".equals(status);
                         } else {
-                            System.err.println("환불 실패: status를 찾을 수 없음");
+                            System.out.println("환불 실패: status를 찾을 수 없음");
                             return false;
                         }
                     } else {
@@ -275,12 +259,12 @@ public class RefundProcessService {
                         Pattern messagePattern = Pattern.compile("\"message\"\\s*:\\s*\"([^\"]+)\"");
                         Matcher messageMatcher = messagePattern.matcher(response.toString());
                         String message = messageMatcher.find() ? messageMatcher.group(1) : "알 수 없는 오류";
-                        System.err.println("환불 실패: " + message);
+                        System.out.println("환불 실패: " + message);
                         return false;
                     }
                 }
             } else {
-                System.err.println("환불 API 호출 실패. HTTP 상태코드: " + responseCode);
+                System.out.println("환불 API 호출 실패. HTTP 상태코드: " + responseCode);
                 return false;
             }
         } catch (IOException e) {
@@ -310,7 +294,7 @@ public class RefundProcessService {
             throw new IllegalArgumentException("유효하지 않은 사용자 정보입니다.");
         }
         
-        System.out.println("[VALIDATION] 환불 파라미터 검증 완료 - BookingId: " + bookingId + ", UserNo: " + userNo);
+        System.out.println("환불 파라미터 검증 완료 - BookingId: " + bookingId + ", UserNo: " + userNo);
     }
 
     /**
@@ -335,7 +319,7 @@ public class RefundProcessService {
             throw new IllegalArgumentException("예약 비밀번호가 누락되었습니다.");
         }
         
-        System.out.println("[VALIDATION] 비회원 환불 파라미터 검증 완료 - BookingId: " + bookingId);
+        System.out.println("비회원 환불 파라미터 검증 완료 - BookingId: " + bookingId);
     }
 
     /**
@@ -349,20 +333,14 @@ public class RefundProcessService {
             throw new IllegalArgumentException("merchant_uid가 누락되었습니다.");
         }
         
-        try {
-            String paymentAmount = refundProcessMapper.getPaymentAmount(merchantUid);
-            
-            if (paymentAmount == null) {
-                System.out.println("[WARNING] 결제 금액 조회 실패 - MerchantUid: " + merchantUid);
-                throw new IllegalArgumentException("해당 merchant_uid에 대한 결제 정보를 찾을 수 없습니다.");
-            }
-            
-            System.out.println("[SUCCESS] 결제 금액 조회 성공 - MerchantUid: " + merchantUid + ", Amount: " + paymentAmount);
-            return paymentAmount;
-            
-        } catch (Exception e) {
-            System.err.println("[SYSTEM ERROR] 결제 금액 조회 중 시스템 오류 발생 - MerchantUid: " + merchantUid + ", Error: " + e.getMessage());
-            throw new Exception("결제 금액 조회 중 예상치 못한 오류가 발생했습니다: " + e.getMessage(), e);
+        String paymentAmount = refundProcessMapper.getPaymentAmount(merchantUid);
+        
+        if (paymentAmount == null) {
+            System.out.println("결제 금액 조회 실패 - MerchantUid: " + merchantUid);
+            throw new IllegalArgumentException("해당 merchant_uid에 대한 결제 정보를 찾을 수 없습니다.");
         }
+        
+        System.out.println("결제 금액 조회 성공 - MerchantUid: " + merchantUid + ", Amount: " + paymentAmount);
+        return paymentAmount;
     }
 } 

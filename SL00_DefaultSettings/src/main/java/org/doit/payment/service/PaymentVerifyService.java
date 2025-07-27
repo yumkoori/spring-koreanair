@@ -72,14 +72,13 @@ public class PaymentVerifyService {
             String accessToken = extractJsonValue(responseStr, "access_token");
             
             if (accessToken != null && !accessToken.isEmpty()) {
-                System.out.println("[ACCESS TOKEN] 토큰 발급 성공");
+                System.out.println("아임포트 토큰 발급 성공");
                 return accessToken;
             } else {
                 throw new Exception("액세스 토큰을 찾을 수 없습니다.");
             }
             
         } catch (IOException e) {
-            System.err.println("[TOKEN ERROR] 아임포트 API 통신 중 오류: " + e.getMessage());
             throw new Exception("아임포트 API 통신 중 오류가 발생했습니다: " + e.getMessage(), e);
         }
     }
@@ -122,7 +121,7 @@ public class PaymentVerifyService {
             
             // JSON 파싱하여 결제 정보 추출
             String responseStr = response.toString();
-            System.out.println("[API RESPONSE] 결제 정보 조회 성공: " + impUid);
+            System.out.println("결제 정보 조회 성공: " + impUid);
             
             // PaymentDTO 객체 생성 및 설정
             PaymentVerifyDTO paymentDTO = new PaymentVerifyDTO();
@@ -143,10 +142,8 @@ public class PaymentVerifyService {
             return paymentDTO;
             
         } catch (IOException e) {
-            System.err.println("[PAYMENT INFO ERROR] 결제 정보 조회 중 네트워크 오류: " + e.getMessage());
             throw new Exception("아임포트 API 통신 중 오류가 발생했습니다: " + e.getMessage(), e);
         } catch (NumberFormatException e) {
-            System.err.println("[PAYMENT INFO ERROR] 결제 금액 파싱 오류: " + e.getMessage());
             throw new Exception("결제 금액 정보가 올바르지 않습니다.", e);
         }
     }
@@ -162,48 +159,42 @@ public class PaymentVerifyService {
             throw new IllegalArgumentException("imp_uid는 필수값입니다.");
         }
         
-        try {
-            System.out.println("[VERIFY START] 결제 검증 시작 - imp_uid: " + impUid);
-            
-            // 1. 아임포트 API에서 결제 정보 조회 (amount, merchant_uid만 필요)
-            PaymentVerifyDTO iamportData = getPaymentInfo(impUid);
-            String iamportMerchantUid = iamportData.getMerchantUid();
-            int iamportAmount = iamportData.getAmount();
-            
-            System.out.println("[IAMPORT DATA] merchant_uid: " + iamportMerchantUid + ", amount: " + iamportAmount);
-            
-            // 2. 결제 상태가 'paid'인지 확인
-            if (!"paid".equals(iamportData.getStatus())) {
-                System.err.println("[VERIFY FAIL] 결제 상태가 완료되지 않음 - 상태: " + iamportData.getStatus());
-                return false;
-            }
-            
-            // 3. DB에서 merchant_uid로 결제 정보 조회
-            PaymentCompareDTO dbData = paymentVerifyMapper.getPaymentCompareInfoByMerchantUid(iamportMerchantUid);
-            String dbMerchantUid = dbData.getMerchantUid();
-            int dbAmount = dbData.getAmount();
-            
-            System.out.println("[DB DATA] merchant_uid: " + dbMerchantUid + ", amount: " + dbAmount);
-            
-            // 4. merchant_uid 비교
-            if (!iamportMerchantUid.equals(dbMerchantUid)) {
-                System.err.println("[VERIFY FAIL] merchant_uid 불일치 - 아임포트: " + iamportMerchantUid + ", DB: " + dbMerchantUid);
-                return false;
-            }
-            
-            // 5. amount 비교
-            if (iamportAmount != dbAmount) {
-                System.err.println("[VERIFY FAIL] 결제 금액 불일치 - 아임포트: " + iamportAmount + "원, DB: " + dbAmount + "원");
-                return false;
-            }
-            
-            System.out.println("[VERIFY SUCCESS] 모든 검증 통과 - merchant_uid: " + dbMerchantUid + ", amount: " + dbAmount + "원");
-            return true;
-            
-        } catch (Exception e) {
-            System.err.println("[VERIFY ERROR] 결제 검증 중 오류 발생: " + e.getMessage());
-            throw e;
+        System.out.println("결제 검증 시작 - imp_uid: " + impUid);
+        
+        // 1. 아임포트 API에서 결제 정보 조회 (amount, merchant_uid만 필요)
+        PaymentVerifyDTO iamportData = getPaymentInfo(impUid);
+        String iamportMerchantUid = iamportData.getMerchantUid();
+        int iamportAmount = iamportData.getAmount();
+        
+        System.out.println("아임포트 데이터 - merchant_uid: " + iamportMerchantUid + ", amount: " + iamportAmount);
+        
+        // 2. 결제 상태가 'paid'인지 확인
+        if (!"paid".equals(iamportData.getStatus())) {
+            System.out.println("결제 상태가 완료되지 않음 - 상태: " + iamportData.getStatus());
+            return false;
         }
+        
+        // 3. DB에서 merchant_uid로 결제 정보 조회
+        PaymentCompareDTO dbData = paymentVerifyMapper.getPaymentCompareInfoByMerchantUid(iamportMerchantUid);
+        String dbMerchantUid = dbData.getMerchantUid();
+        int dbAmount = dbData.getAmount();
+        
+        System.out.println("DB 데이터 - merchant_uid: " + dbMerchantUid + ", amount: " + dbAmount);
+        
+        // 4. merchant_uid 비교
+        if (!iamportMerchantUid.equals(dbMerchantUid)) {
+            System.out.println("merchant_uid 불일치 - 아임포트: " + iamportMerchantUid + ", DB: " + dbMerchantUid);
+            return false;
+        }
+        
+        // 5. amount 비교
+        if (iamportAmount != dbAmount) {
+            System.out.println("결제 금액 불일치 - 아임포트: " + iamportAmount + "원, DB: " + dbAmount + "원");
+            return false;
+        }
+        
+        System.out.println("모든 검증 통과 - merchant_uid: " + dbMerchantUid + ", amount: " + dbAmount + "원");
+        return true;
     }
     
     /**
@@ -218,22 +209,16 @@ public class PaymentVerifyService {
             throw new IllegalArgumentException("merchant_uid는 필수값입니다.");
         }
         
-        try {
-            int updateResult = paymentVerifyMapper.updatePaymentStatusToPaid(merchantUid);
-            boolean success = updateResult > 0;
-            
-            if (success) {
-                System.out.println("[STATUS UPDATE SUCCESS] 결제 상태 업데이트 완료 - merchant_uid: " + merchantUid);
-            } else {
-                System.err.println("[STATUS UPDATE FAIL] 결제 상태 업데이트 실패 - merchant_uid: " + merchantUid);
-            }
-            
-            return success;
-            
-        } catch (Exception e) {
-            System.err.println("[STATUS UPDATE ERROR] 결제 상태 업데이트 중 오류 발생: " + e.getMessage());
-            throw e;
+        int updateResult = paymentVerifyMapper.updatePaymentStatusToPaid(merchantUid);
+        boolean success = updateResult > 0;
+        
+        if (success) {
+            System.out.println("결제 상태 업데이트 완료 - merchant_uid: " + merchantUid);
+        } else {
+            System.out.println("결제 상태 업데이트 실패 - merchant_uid: " + merchantUid);
         }
+        
+        return success;
     }
     
     /**
@@ -259,7 +244,7 @@ public class PaymentVerifyService {
             }
             return null;
         } catch (Exception e) {
-            System.err.println("[JSON PARSE ERROR] JSON 파싱 오류 - 필드: " + fieldName + ", 오류: " + e.getMessage());
+            System.out.println("JSON 파싱 오류 - 필드: " + fieldName + ", 오류: " + e.getMessage());
             return null;
         }
     }
