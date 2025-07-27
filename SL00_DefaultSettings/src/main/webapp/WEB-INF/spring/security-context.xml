@@ -58,6 +58,8 @@
         <!-- Flight search API for non-members -->
         <intercept-url pattern="/api/search/flight" access="permitAll"/>
         <intercept-url pattern="/api/booking" access="permitAll"/>
+        <intercept-url pattern="/api/save/nonUserPw" access="permitAll"/>
+        <intercept-url pattern="/api/passenger" access="permitAll"/>
         
         <!-- Payment pages for non-members -->
         <intercept-url pattern="/payment/page" access="permitAll"/>
