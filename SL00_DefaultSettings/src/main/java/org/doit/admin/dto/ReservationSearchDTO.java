@@ -1,6 +1,6 @@
 package org.doit.admin.dto;
 
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,7 +28,7 @@ public class ReservationSearchDTO {
 	private	String seatClass;
 	private	int passenger;
 	private	int totalPrice;
-	private	LocalTime expireTime;
+	private	LocalDateTime expireTime;
 	private	String endDate;
 	private	String flightNO;
 	private	String birthDate;

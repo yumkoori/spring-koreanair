@@ -117,12 +117,15 @@ String contextPath = request.getContextPath();
 												<tr style="text-align: center;">
 													<th style="text-align: center; vertical-align: middle;">예약번호</th>
 													<th style="text-align: center; vertical-align: middle;">사용자명</th>
+													<th style="text-align: center; vertical-align: middle;">생년월일</th>
 													<th style="text-align: center; vertical-align: middle;">이메일</th>
 													<th style="text-align: center; vertical-align: middle;">연락처</th>
+													<th style="text-align: center; vertical-align: middle;">항공편명</th>
 													<th style="text-align: center; vertical-align: middle;">출발지</th>
 													<th style="text-align: center; vertical-align: middle;">도착지</th>
 													<th style="text-align: center; vertical-align: middle;">출발일</th>
 													<th style="text-align: center; vertical-align: middle;">예약일</th>
+													<th style="text-align: center; vertical-align: middle;">예약완료시간</th>
 													<th style="text-align: center; vertical-align: middle;">상태</th>
 													<th style="text-align: center; vertical-align: middle;">좌석 등급</th>
 													<th style="text-align: center; vertical-align: middle;">승객 수</th>
@@ -167,6 +170,10 @@ String contextPath = request.getContextPath();
 													<tr>
 														<td style="vertical-align: middle;"><strong>예약일:</strong></td>
 														<td style="vertical-align: middle;" id="modalReservationDate">-</td>
+													</tr>
+													<tr>
+														<td style="vertical-align: middle;"><strong>예약완료시간:</strong></td>
+														<td style="vertical-align: middle;" id="modalExpireTime">-</td>
 													</tr>
 													<tr>
 														<td style="vertical-align: middle;"><strong>예약 상태:</strong></td>
@@ -346,7 +353,7 @@ String contextPath = request.getContextPath();
 			if (!reservations || reservations.length === 0) {
 				tbody.append(`
 					<tr>
-						<td colspan="13" class="text-center">
+						<td colspan="16" class="text-center">
 							<i class="fa fa-info-circle"></i> 검색 결과가 없습니다.
 						</td>
 					</tr>
@@ -355,26 +362,31 @@ String contextPath = request.getContextPath();
 			}
 
 			reservations.forEach(reservation => {
-				// null/undefined 값 안전 처리 - null 값은 그대로 표시
+				// null/undefined 값 안전 처리
 				const statusLabel = getStatusLabel(reservation.status);
-				const formattedAmount = reservation.totalAmount != null ? formatCurrency(reservation.totalAmount) : null;
-				const departureDate = reservation.departureTime ? reservation.departureTime.split(' ')[0] : null;
-				const reservationDate = reservation.reservationDate ? reservation.reservationDate.split(' ')[0] : null;
+				const formattedAmount = reservation.totalAmount != null ? formatCurrency(reservation.totalAmount) : '-';
+				const departureDate = reservation.departureTime ? reservation.departureTime.split(' ')[0] : '-';
+				const reservationDate = reservation.reservationDate ? reservation.reservationDate.split(' ')[0] : '-';
+				const expireTime = reservation.expireTime ? reservation.expireTime : '-';
+				const userBirth = reservation.userBirth ? reservation.userBirth.split(' ')[0] : '-';
 				
 				tbody.append(`
 					<tr>
-						<td style="vertical-align: middle;">\${reservation.reservationId || null}</td>
-						<td style="vertical-align: middle;">\${reservation.userName || null}</td>
-						<td style="vertical-align: middle;">\${reservation.userEmail || null}</td>
-						<td style="vertical-align: middle;">\${reservation.userPhone || null}</td>
-						<td style="vertical-align: middle;">\${reservation.departure || null}</td>
-						<td style="vertical-align: middle;">\${reservation.arrival || null}</td>
-						<td style="vertical-align: middle;">\${departureDate || null}</td>
-						<td style="vertical-align: middle;">\${reservationDate || null}</td>
+						<td style="vertical-align: middle;">\${reservation.reservationId || '-'}</td>
+						<td style="vertical-align: middle;">\${reservation.userName || '-'}</td>
+						<td style="vertical-align: middle;">\${userBirth}</td>
+						<td style="vertical-align: middle;">\${reservation.userEmail || '-'}</td>
+						<td style="vertical-align: middle;">\${reservation.userPhone || '-'}</td>
+						<td style="vertical-align: middle;">\${reservation.flightNumber || '-'}</td>
+						<td style="vertical-align: middle;">\${reservation.departure || '-'}</td>
+						<td style="vertical-align: middle;">\${reservation.arrival || '-'}</td>
+						<td style="vertical-align: middle;">\${departureDate}</td>
+						<td style="vertical-align: middle;">\${reservationDate}</td>
+						<td style="vertical-align: middle;">\${expireTime}</td>
 						<td style="vertical-align: middle;">\${statusLabel}</td>
-						<td style="vertical-align: middle;">\${reservation.seatClass || null}</td>
-						<td style="vertical-align: middle;">\${reservation.passengerCount != null ? reservation.passengerCount + '명' : null}</td>
-						<td style="vertical-align: middle;">\${formattedAmount || null}</td>
+						<td style="vertical-align: middle;">\${reservation.seatClass || '-'}</td>
+						<td style="vertical-align: middle;">\${reservation.passengerCount != null && reservation.passengerCount >= 0 ? reservation.passengerCount + '명' : '-'}</td>
+						<td style="vertical-align: middle;">\${formattedAmount}</td>
 						<td style="vertical-align: middle;">
 							<button class="btn btn-info btn-xs" onclick="showReservationDetail('\${reservation.reservationId || ''}')">
 								<i class="fa fa-eye"></i> 상세
@@ -387,9 +399,9 @@ String contextPath = request.getContextPath();
 
 		// 상태에 따른 라벨 생성
 		function getStatusLabel(status) {
-			// null이나 undefined인 경우 null 반환
+			// null이나 undefined인 경우 기본값 반환
 			if (status == null || status === '') {
-				return null;
+				return '<span class="label label-default">-</span>';
 			}
 			
 			const statusMap = {
@@ -399,14 +411,14 @@ String contextPath = request.getContextPath();
 				'completed': '<span class="label label-info">완료</span>',
 				'unknown': '<span class="label label-default">알 수 없음</span>'
 			};
-			return statusMap[status] || null;
+			return statusMap[status] || '<span class="label label-default">-</span>';
 		}
 
 		// 원화 포맷팅 함수
 		function formatCurrency(amount) {
-			// null이나 undefined인 경우 null 반환
+			// null이나 undefined인 경우 '-' 반환
 			if (amount == null) {
-				return null;
+				return '-';
 			}
 			return new Intl.NumberFormat('ko-KR', {
 				style: 'currency',
@@ -578,24 +590,25 @@ String contextPath = request.getContextPath();
 			$('#reservationTableBody tr').each(function() {
 				const rowReservationId = $(this).find('td:first').text();
 				if (rowReservationId === reservationId) {
-					const cells = $(this).find('td');
-					reservation = {
-						reservationId: cells.eq(0).text() === 'null' ? null : cells.eq(0).text(),
-						userName: cells.eq(1).text() === 'null' ? null : cells.eq(1).text(),
-						userEmail: cells.eq(2).text() === 'null' ? null : cells.eq(2).text(),
-						userPhone: cells.eq(3).text() === 'null' ? null : cells.eq(3).text(),
-						departure: cells.eq(4).text() === 'null' ? null : cells.eq(4).text(),
-						arrival: cells.eq(5).text() === 'null' ? null : cells.eq(5).text(),
-						departureTime: cells.eq(6).text() === 'null' ? null : (cells.eq(6).text() ? cells.eq(6).text() + ' 00:00' : null),
-						reservationDate: cells.eq(7).text() === 'null' ? null : (cells.eq(7).text() ? cells.eq(7).text() + ' 00:00' : null),
-						status: $(cells.eq(8).find('span')).text() ? $(cells.eq(8).find('span')).text().toLowerCase() : null,
-						seatClass: cells.eq(9).text() === 'null' ? null : cells.eq(9).text(),
-						passengerCount: cells.eq(10).text() === 'null' ? null : parseInt(cells.eq(10).text()),
-						totalAmount: cells.eq(11).text() === 'null' ? null : cells.eq(11).text(),
-						userBirth: null,
-						flightNumber: null,
-						arrivalTime: cells.eq(6).text() === 'null' ? null : (cells.eq(6).text() ? cells.eq(6).text() + ' 23:59' : null)
-					};
+									const cells = $(this).find('td');
+				reservation = {
+					reservationId: cells.eq(0).text() === '-' ? null : cells.eq(0).text(),
+					userName: cells.eq(1).text() === '-' ? null : cells.eq(1).text(),
+					userBirth: cells.eq(2).text() === '-' ? null : cells.eq(2).text(),
+					userEmail: cells.eq(3).text() === '-' ? null : cells.eq(3).text(),
+					userPhone: cells.eq(4).text() === '-' ? null : cells.eq(4).text(),
+					flightNumber: cells.eq(5).text() === '-' ? null : cells.eq(5).text(),
+					departure: cells.eq(6).text() === '-' ? null : cells.eq(6).text(),
+					arrival: cells.eq(7).text() === '-' ? null : cells.eq(7).text(),
+					departureTime: cells.eq(8).text() === '-' ? null : (cells.eq(8).text() ? cells.eq(8).text() + ' 00:00' : null),
+					reservationDate: cells.eq(9).text() === '-' ? null : (cells.eq(9).text() ? cells.eq(9).text() + ' 00:00' : null),
+					expireTime: cells.eq(10).text() === '-' ? null : cells.eq(10).text(),
+					status: $(cells.eq(11).find('span')).text() ? $(cells.eq(11).find('span')).text().toLowerCase() : null,
+					seatClass: cells.eq(12).text() === '-' ? null : cells.eq(12).text(),
+					passengerCount: cells.eq(13).text() === '-' ? null : parseInt(cells.eq(13).text()),
+					totalAmount: cells.eq(14).text() === '-' ? null : cells.eq(14).text(),
+					arrivalTime: cells.eq(8).text() === '-' ? null : (cells.eq(8).text() ? cells.eq(8).text() + ' 23:59' : null)
+				};
 					return false; // break
 				}
 			});
@@ -605,30 +618,31 @@ String contextPath = request.getContextPath();
 				return;
 			}
 
-			// 모달에 데이터 채우기 - null 값은 그대로 표시
-			$('#modalReservationId').text(reservation.reservationId || null);
-			$('#modalReservationDate').text(reservation.reservationDate || null);
-			$('#modalReservationStatus').html(getStatusLabel(reservation.status) || null);
+			// 모달에 데이터 채우기
+			$('#modalReservationId').text(reservation.reservationId || '-');
+			$('#modalReservationDate').text(reservation.reservationDate || '-');
+			$('#modalExpireTime').text(reservation.expireTime || '-');
+			$('#modalReservationStatus').html(getStatusLabel(reservation.status) || '<span class="label label-default">-</span>');
 			
 			const totalAmount = reservation.totalAmount != null 
 				? (typeof reservation.totalAmount === 'string' 
 					? parseFloat(reservation.totalAmount.replace(/[^\d]/g, '')) 
 					: reservation.totalAmount)
 				: null;
-			$('#modalTotalAmount').text(totalAmount != null ? formatCurrency(totalAmount) : null);
+			$('#modalTotalAmount').text(totalAmount != null ? formatCurrency(totalAmount) : '-');
 			
-			$('#modalUserName').text(reservation.userName || null);
-			$('#modalUserEmail').text(reservation.userEmail || null);
-			$('#modalUserPhone').text(reservation.userPhone || null);
-			$('#modalUserBirth').text(reservation.userBirth || null);
+			$('#modalUserName').text(reservation.userName || '-');
+			$('#modalUserEmail').text(reservation.userEmail || '-');
+			$('#modalUserPhone').text(reservation.userPhone || '-');
+			$('#modalUserBirth').text(reservation.userBirth || '-');
 			
-			$('#modalFlightNumber').text(reservation.flightNumber || null);
-			$('#modalDeparture').text(reservation.departure || null);
-			$('#modalArrival').text(reservation.arrival || null);
-			$('#modalDepartureTime').text(reservation.departureTime || null);
-			$('#modalArrivalTime').text(reservation.arrivalTime || null);
-			$('#modalSeatClass').text(reservation.seatClass || null);
-			$('#modalPassengerCount').text(reservation.passengerCount != null ? reservation.passengerCount + '명' : null);
+			$('#modalFlightNumber').text(reservation.flightNumber || '-');
+			$('#modalDeparture').text(reservation.departure || '-');
+			$('#modalArrival').text(reservation.arrival || '-');
+			$('#modalDepartureTime').text(reservation.departureTime || '-');
+			$('#modalArrivalTime').text(reservation.arrivalTime || '-');
+			$('#modalSeatClass').text(reservation.seatClass || '-');
+			$('#modalPassengerCount').text(reservation.passengerCount != null && reservation.passengerCount >= 0 ? reservation.passengerCount + '명' : '-');
 
 			// 삭제 버튼에 예약 ID 저장
 			$('#deleteReservationBtn').data('reservation-id', reservationId);

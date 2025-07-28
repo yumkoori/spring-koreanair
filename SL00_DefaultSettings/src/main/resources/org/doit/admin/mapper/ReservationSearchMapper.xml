@@ -16,7 +16,7 @@ SELECT
     da.airport_name AS start,
     aa.airport_name AS end,
     f.arrival_time AS startDate,
-    
+    f.flightNo AS flightNO,
     bs.booking_completed_at AS expireTime,
    
     fs.class_id AS seatClass,

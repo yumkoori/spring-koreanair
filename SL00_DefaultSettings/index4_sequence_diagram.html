@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>좌석 관리 페이지 (index4.jsp) - 시퀀스 다이어그램</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .description {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+        .mermaid {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .section h2 {
+            color: #34495e;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>좌석 관리 페이지 (index4.jsp) - 시퀀스 다이어그램</h1>
+        
+        <div class="description">
+            <p><strong>페이지 개요:</strong> 항공기 좌석 배치도를 관리하고 좌석별 가격을 설정하는 관리자 페이지입니다.</p>
+            <p><strong>주요 기능:</strong> 좌석 선택, 클래스별 가격 설정, 좌석 데이터 저장/불러오기, 항공기 검색</p>
+        </div>
+
+        <div class="section">
+            <h2>1. 페이지 초기 로딩 및 좌석 렌더링</h2>
+            <div class="mermaid">
+sequenceDiagram
+    participant User as 사용자
+    participant Browser as 브라우저
+    participant JSP as index4.jsp
+    participant FlightSeatCtrl as FlightSeatController
+    participant JS as JavaScript
+
+    User->>Browser: /views/index4 접속
+    Browser->>FlightSeatCtrl: GET /views/index4
+    FlightSeatCtrl->>JSP: return "adminpage/index4"
+    JSP->>Browser: HTML 페이지 렌더링
+    Browser->>JS: DOMContentLoaded 이벤트
+    JS->>JS: renderAircraft('model1')
+    JS->>Browser: 좌석 배치도 생성 완료
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>2. 항공기 검색 기능</h2>
+            <div class="mermaid">
+sequenceDiagram
+    participant User as 사용자
+    participant JS as JavaScript
+    participant SearchCtrl as FlightPlaneSearchController
+
+    User->>JS: 검색어 입력 후 Enter
+    JS->>JS: Searchplane() 함수 호출
+    JS->>SearchCtrl: GET /flights/searchplane?searchword={검색어}
+    SearchCtrl->>SearchCtrl: 검색어 DB 조회
+    alt 검색 성공 (check=1)
+        SearchCtrl->>JS: {"check": 1}
+        JS->>User: "검색 완료!" 알림
+        JS->>JS: renderAircraft('model1')
+        JS->>Browser: URL 파라미터 업데이트
+    else 검색 실패 (check=0)
+        SearchCtrl->>JS: {"check": 0}
+        JS->>User: "DB에 없는 비행기입니다" 알림
+        JS->>JS: 기본값으로 복원
+    end
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>3. 좌석 선택 및 관리</h2>
+            <div class="mermaid">
+sequenceDiagram
+    participant User as 사용자
+    participant JS as JavaScript
+    participant DOM as DOM Element
+
+    User->>DOM: 좌석 클릭
+    DOM->>JS: handleSeatClick() 이벤트
+    JS->>JS: toggleSeatSelection() 함수
+    alt 예약된 좌석
+        JS->>User: "이미 예약된 좌석입니다" 알림
+    else 선택 가능한 좌석
+        JS->>JS: selectedSeats 배열 업데이트
+        JS->>DOM: CSS 클래스 변경 (seat-user-selected)
+        JS->>JS: updateSelectedSeatCount()
+        JS->>DOM: 선택 좌석 목록 UI 업데이트
+    end
+
+    Note over User,DOM: 전체 선택/해제 버튼
+    User->>JS: "전체 선택" 버튼 클릭
+    JS->>JS: selectAllSeats() 함수
+    JS->>DOM: 모든 좌석에 선택 스타일 적용
+    JS->>JS: updateSelectedSeatCount()
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>4. 좌석 가격 설정 - 개별 클래스</h2>
+            <div class="mermaid">
+sequenceDiagram
+    participant User as 사용자
+    participant JS as JavaScript
+    participant PriceCtrl as SeatEachPriceSaveController
+
+    User->>JS: 일등석 가격 입력 후 "적용" 클릭
+    JS->>JS: applyFirstClassPrice() 함수
+    JS->>JS: saveSingleClassPrice(price, 'FIR')
+    JS->>PriceCtrl: POST /flights/eachpricesave?flight_id={id}
+    Note over JS,PriceCtrl: JSON: {"classseat": "FIR", "price": 가격}
+    
+    PriceCtrl->>PriceCtrl: flight_id 유효성 검사
+    PriceCtrl->>PriceCtrl: DB에 가격 저장/업데이트
+    alt 저장 성공
+        PriceCtrl->>JS: {"status": "success"}
+        JS->>User: "FIR 클래스 가격이 저장되었습니다" 알림
+    else 중복 데이터
+        PriceCtrl->>JS: {"status": "duplication"}
+        JS->>User: "가격이 이미 저장되어 있습니다" 알림
+    else 저장 실패
+        PriceCtrl->>JS: {"status": "fail", "message": "오류메시지"}
+        JS->>User: "저장 실패" 알림
+    end
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>5. 모든 클래스 가격 일괄 적용</h2>
+            <div class="mermaid">
+sequenceDiagram
+    participant User as 사용자
+    participant JS as JavaScript
+    participant AllPriceCtrl as SeatPriceSaveController
+
+    User->>JS: 모든 가격 입력 후 "모든 클래스 가격 한번에 적용" 클릭
+    JS->>JS: applyAllPrices() 함수
+    JS->>JS: 모든 가격 유효성 검사
+    JS->>AllPriceCtrl: POST /flights/seatpricesave?flight_id={id}
+    Note over JS,AllPriceCtrl: JSON 배열: [{"classseat":"FIR","price":가격1}, {"classseat":"PRE","price":가격2}, {"classseat":"ECONOMY","price":가격3}]
+    
+    AllPriceCtrl->>AllPriceCtrl: flight_id 유효성 검사
+    AllPriceCtrl->>AllPriceCtrl: 모든 클래스 가격 일괄 저장
+    alt 저장 성공
+        AllPriceCtrl->>JS: {"status": "success"}
+        JS->>User: "모든 클래스 가격이 저장되었습니다" 알림
+    else 일부 중복
+        AllPriceCtrl->>JS: {"status": "duplication"}
+        JS->>User: "일부 클래스 가격이 이미 저장되어 있습니다" 알림
+    end
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>6. 선택 좌석 DB 저장</h2>
+            <div class="mermaid">
+sequenceDiagram
+    participant User as 사용자
+    participant JS as JavaScript
+    participant SeatSaveCtrl as SeatSaveController
+
+    User->>JS: 좌석 선택 후 "DB에 저장" 버튼 클릭
+    JS->>JS: saveSelectedSeatsOnly() 함수
+    JS->>JS: selectedSeats 배열 처리 및 클래스 분류
+    JS->>SeatSaveCtrl: POST /flights/seatsave?flight_id={id}
+    Note over JS,SeatSaveCtrl: JSON: {"seats": [{"row":"7","seat":"A","seatclass":"FIR"},...], "totalCount": 숫자}
+    
+    SeatSaveCtrl->>SeatSaveCtrl: flight_id 유효성 검사
+    SeatSaveCtrl->>SeatSaveCtrl: 좌석 데이터 DB 저장
+    alt 저장 성공
+        SeatSaveCtrl->>JS: {"status": "success"}
+        JS->>User: "선택된 N개 좌석이 저장되었습니다" 알림
+        JS->>JS: deselectAllSeats() - 선택 해제
+    else 가격 미설정
+        SeatSaveCtrl->>JS: {"status": "existence"}
+        JS->>User: "값이 저장되어 있지 않으면 좌석을 지정할 수 없습니다" 알림
+    else 중복 좌석
+        SeatSaveCtrl->>JS: {"status": "duplication"}
+        JS->>User: "일부 좌석이 이미 저장되어 있습니다" 알림
+    end
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>7. 저장된 좌석 데이터 불러오기</h2>
+            <div class="mermaid">
+sequenceDiagram
+    participant User as 사용자
+    participant JS as JavaScript
+    participant LoadCtrl as SeatloadController
+
+    User->>JS: "저장된 좌석 불러오기" 버튼 클릭
+    JS->>JS: loadSavedSeats() 함수
+    JS->>LoadCtrl: GET /flight/seatload?flight_id={id}
+    
+    LoadCtrl->>LoadCtrl: flight_id 유효성 검사
+    LoadCtrl->>LoadCtrl: DB에서 좌석 데이터 및 가격 데이터 조회
+    LoadCtrl->>JS: {"status": "success", "seatData": [...], "seatPriceData": [...]}
+    
+    JS->>JS: applyPricesToAllSeats() - 모든 좌석에 가격 적용
+    JS->>JS: 예약된 좌석 상태 처리
+    loop 각 좌석별 처리
+        alt 예약된 좌석 (selectable=true)
+            JS->>DOM: applySeatReservedStyle() - "예약됨" 표시
+        else 선택 가능한 좌석
+            JS->>DOM: applySeatAvailableStyle() - 가격 정보 표시
+        end
+    end
+    JS->>User: "좌석 가격 정보와 N개의 좌석 상태를 불러왔습니다" 알림
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'neutral',
+            sequence: {
+                diagramMarginX: 50,
+                diagramMarginY: 10,
+                actorMargin: 50,
+                width: 150,
+                height: 65,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 35,
+                mirrorActors: true,
+                bottomMarginAdj: 1,
+                useMaxWidth: true,
+                rightAngles: false,
+                showSequenceNumbers: false
+            }
+        });
+    </script>
+</body>
+</html>

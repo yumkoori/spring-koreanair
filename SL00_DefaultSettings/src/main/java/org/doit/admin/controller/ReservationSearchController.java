@@ -1,5 +1,7 @@
 package org.doit.admin.controller;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,12 +57,35 @@ public class ReservationSearchController {
 					reservationMap.put("userPhone", dto.getPhone());
 					reservationMap.put("userBirth", dto.getBirthDate());
 					reservationMap.put("flightNumber", dto.getFlightNO());
+					
+					// expireTime에서 날짜와 시간 분리
+					String expireTimeStr = null;
+					String reservationDate = null;
+					
+					if (dto.getExpireTime() != null) {
+						// 날짜 부분을 예약일로 사용
+						reservationDate = dto.getExpireTime().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+						// 시간 부분만 expireTime으로 사용
+						expireTimeStr = dto.getExpireTime().toLocalTime().toString();
+					} else {
+						// expireTime이 null이면 현재 날짜와 시간 사용
+						reservationDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+					}
+					
+					// bookingDate가 있으면 그것을 우선 사용, 없으면 expireTime의 날짜 사용
+					if (dto.getBookingDate() != null) {
+						reservationDate = dto.getBookingDate();
+					}
+					
+					reservationMap.put("expireTime", expireTimeStr);
+					reservationMap.put("reservationDate", reservationDate);
+					
 					reservationMap.put("departure", dto.getStart());
 					reservationMap.put("arrival", dto.getEnd());
 					reservationMap.put("departureTime", dto.getStartDate());
 					reservationMap.put("arrivalTime", dto.getEndDate());
-					reservationMap.put("reservationDate", dto.getBookingDate());
-					reservationMap.put("status", dto.getStatus());
+					
+					reservationMap.put("status", "completed");  // 상태를 완료로 고정
 					reservationMap.put("seatClass", dto.getSeatClass());
 					reservationMap.put("passengerCount", dto.getPassenger());
 					reservationMap.put("totalAmount", dto.getTotalPrice());
