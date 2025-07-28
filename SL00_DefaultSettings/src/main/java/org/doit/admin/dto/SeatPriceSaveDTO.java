@@ -1,0 +1,22 @@
+package org.doit.admin.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class SeatPriceSaveDTO {
+	
+    private String aircraft;
+    private String row;
+    private String seat;
+    private int price;
+    private String classseat;
+    private String seatclass;
+}

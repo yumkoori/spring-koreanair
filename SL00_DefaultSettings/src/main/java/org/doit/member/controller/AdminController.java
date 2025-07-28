@@ -26,7 +26,7 @@ public class AdminController {
             return "redirect:/login";
         }
         
-        return "adminpage/adminindex";
+        return "/adminpage/index4";
     }
     
     @RequestMapping(value = "/users", method = RequestMethod.GET)

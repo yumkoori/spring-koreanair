@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="org.doit.admin.mapper.SeatSaveDuplicationMapper">
+    
+<select id="seatSaveDuplication" resultType="int">
+SELECT COUNT(*)
+FROM flight_seat
+WHERE 
+<foreach collection="list" item="item" separator=" OR ">
+(flight_id = #{flightid} AND row = #{item.row} AND seat = #{item.seat} )
+</foreach>
+</select>
+
+<select id="seatSavePirceExistence" resultType="int">
+SELECT COUNT(DISTINCT class_id)
+FROM seat_price
+WHERE flight_id = #{flightid} 
+AND class_id IN 
+<foreach collection="list" item="item" open="(" separator="," close=")">
+#{item.seatclass}
+</foreach>
+</select>
+
+</mapper> 
+
+

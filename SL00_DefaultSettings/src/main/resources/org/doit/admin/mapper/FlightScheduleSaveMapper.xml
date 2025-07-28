@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="org.doit.admin.mapper.FlightScheduleSaveMapper">
+    
+    <insert id="saveSchedules" parameterType="java.util.List">
+    INSERT INTO flight (flight_id, aircraft_id, departure_airport_id, arrival_airport_id, arrival_time, departure_time, terminal, status, flightNo) 
+    VALUES
+    <foreach collection="list" item="item" separator=",">
+    (UUID(), 'B789', #{item.origin}, #{item.destination}, #{item.departureTime}, #{item.arrivalTime}, 'T1', #{item.status}, #{item.flightNo})
+    </foreach>
+    </insert>
+    
+</mapper> 
+
+
