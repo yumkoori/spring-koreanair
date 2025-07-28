@@ -303,6 +303,18 @@
     <version>3.3.1</version>
 </dependency>
 
+<dependency>
+    <groupId>com.google.code.gson</groupId>
+    <artifactId>gson</artifactId>
+    <version>2.10.1</version>
+</dependency>
+
+<dependency>
+    <groupId>org.json</groupId>
+    <artifactId>json</artifactId>
+    <version>20240303</version> <!-- 최신 버전 기준 (2024년 3월 3일) -->
+</dependency>
+
 	</dependencies>
     <build>
         <plugins>

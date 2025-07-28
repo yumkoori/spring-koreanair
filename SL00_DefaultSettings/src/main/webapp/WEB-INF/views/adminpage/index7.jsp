@@ -64,41 +64,18 @@ String contextPath = request.getContextPath();
 								</div>
 								<div class="x_content">
 									<div class="row">
-										<div class="col-md-3">
+										<div class="col-md-8">
 											<div class="form-group">
-												<label>검색 유형</label>
-												<select class="form-control" id="searchType">
-													<option value="reservationId">예약번호</option>
-													<option value="userName">사용자명</option>
-													<option value="userEmail">이메일</option>
-													<option value="phone">연락처</option>
-												</select>
-											</div>
-										</div>
-										<div class="col-md-6">
-											<div class="form-group">
-												<label>검색어</label>
+												<label>사용자명으로 검색</label>
 												<div class="input-group">
 													<input type="text" class="form-control" id="reservationSearchInput" 
-														   placeholder="검색어를 입력하세요..." />
+														   placeholder="사용자명을 입력하세요..." />
 													<span class="input-group-btn">
 														<button class="btn btn-primary" type="button" id="searchReservationBtn">
 															<i class="fa fa-search"></i> 검색
 														</button>
 													</span>
 												</div>
-											</div>
-										</div>
-										<div class="col-md-3">
-											<div class="form-group">
-												<label>예약 상태</label>
-												<select class="form-control" id="reservationStatus">
-													<option value="">전체</option>
-													<option value="confirmed">확정</option>
-													<option value="pending">대기</option>
-													<option value="cancelled">취소</option>
-													<option value="completed">완료</option>
-												</select>
 											</div>
 										</div>
 									</div>
@@ -159,12 +136,7 @@ String contextPath = request.getContextPath();
 										</table>
 									</div>
 									
-									<!-- 페이지네이션 -->
-									<nav aria-label="검색 결과 페이지">
-										<ul class="pagination justify-content-center" id="searchPagination">
-											<!-- 페이지 번호들이 여기에 동적으로 추가됩니다 -->
-										</ul>
-									</nav>
+
 								</div>
 							</div>
 						</div>
@@ -356,163 +328,22 @@ String contextPath = request.getContextPath();
 	<!-- 예약 관리 JavaScript -->
 	<script>
 	$(document).ready(function() {
-		// 모의 예약 데이터 (실제 프로젝트에서는 서버에서 가져올 데이터)
-		let mockReservations = [
-			{
-				reservationId: "KE240101001",
-				userName: "김철수",
-				userEmail: "kim@example.com",
-				userPhone: "010-1234-5678",
-				userBirth: "1985-03-15",
-				flightNumber: "KE001",
-				departure: "인천(ICN)",
-				arrival: "도쿄(NRT)",
-				departureTime: "2024-03-15 09:00",
-				arrivalTime: "2024-03-15 11:30",
-				reservationDate: "2024-02-01 14:30",
-				status: "confirmed",
-				seatClass: "이코노미",
-				passengerCount: 2,
-				totalAmount: 850000
-			},
-			{
-				reservationId: "KE240101002",
-				userName: "이영희",
-				userEmail: "lee@example.com",
-				userPhone: "010-2345-6789",
-				userBirth: "1990-07-22",
-				flightNumber: "KE123",
-				departure: "인천(ICN)",
-				arrival: "파리(CDG)",
-				departureTime: "2024-03-20 13:45",
-				arrivalTime: "2024-03-21 07:15",
-				reservationDate: "2024-02-02 10:15",
-				status: "pending",
-				seatClass: "비즈니스",
-				passengerCount: 1,
-				totalAmount: 2500000
-			},
-			{
-				reservationId: "KE240101003",
-				userName: "박민수",
-				userEmail: "park@example.com",
-				userPhone: "010-3456-7890",
-				userBirth: "1988-12-03",
-				flightNumber: "KE456",
-				departure: "부산(PUS)",
-				arrival: "방콕(BKK)",
-				departureTime: "2024-03-18 16:20",
-				arrivalTime: "2024-03-18 19:45",
-				reservationDate: "2024-02-03 16:45",
-				status: "cancelled",
-				seatClass: "이코노미",
-				passengerCount: 3,
-				totalAmount: 1200000
-			},
-			{
-				reservationId: "KE240101004",
-				userName: "정수연",
-				userEmail: "jung@example.com",
-				userPhone: "010-4567-8901",
-				userBirth: "1992-05-18",
-				flightNumber: "KE789",
-				departure: "인천(ICN)",
-				arrival: "뉴욕(JFK)",
-				departureTime: "2024-03-25 11:00",
-				arrivalTime: "2024-03-25 14:30",
-				reservationDate: "2024-02-04 09:20",
-				status: "completed",
-				seatClass: "퍼스트",
-				passengerCount: 2,
-				totalAmount: 4800000
-			},
-			{
-				reservationId: "KE240101005",
-				userName: "최동훈",
-				userEmail: "choi@example.com",
-				userPhone: "010-5678-9012",
-				userBirth: "1987-09-11",
-				flightNumber: "KE321",
-				departure: "제주(CJU)",
-				arrival: "오사카(KIX)",
-				departureTime: "2024-03-22 08:30",
-				arrivalTime: "2024-03-22 10:15",
-				reservationDate: "2024-02-05 13:10",
-				status: "confirmed",
-				seatClass: "이코노미",
-				passengerCount: 1,
-				totalAmount: 320000
-			}
-		];
-
-		let currentReservations = [...mockReservations];
-		let currentPage = 1;
-		const itemsPerPage = 10;
 
 		// 페이지 로드 시 초기 예약 목록 출력
 		function initializeReservationList() {
-			// 서버에서 전체 목록 조회
-			loadAllReservations();
+			console.log('=== 페이지 초기화 ===');
+			displayServerReservations([]);
+			updateResultCount(0);
 		}
 
-		// 예약 목록 출력 함수 (로컬 데이터용)
-		function displayReservations(reservations) {
-			const tbody = $('#reservationTableBody');
-			tbody.empty();
 
-			if (reservations.length === 0) {
-				tbody.append(`
-					<tr>
-						<td colspan="13" class="text-center">
-							<i class="fa fa-info-circle"></i> 검색 결과가 없습니다.
-						</td>
-					</tr>
-				`);
-				return;
-			}
-
-			// 페이지네이션 계산
-			const startIndex = (currentPage - 1) * itemsPerPage;
-			const endIndex = startIndex + itemsPerPage;
-			const pageReservations = reservations.slice(startIndex, endIndex);
-
-			pageReservations.forEach(reservation => {
-				const statusLabel = getStatusLabel(reservation.status);
-				const formattedAmount = formatCurrency(reservation.totalAmount);
-				
-				tbody.append(`
-					<tr>
-						<td style="vertical-align: middle;">${reservation.reservationId}</td>
-						<td style="vertical-align: middle;">${reservation.userName}</td>
-						<td style="vertical-align: middle;">${reservation.userEmail}</td>
-						<td style="vertical-align: middle;">${reservation.userPhone}</td>
-						<td style="vertical-align: middle;">${reservation.departure}</td>
-						<td style="vertical-align: middle;">${reservation.arrival}</td>
-						<td style="vertical-align: middle;">${reservation.departureTime.split(' ')[0]}</td>
-						<td style="vertical-align: middle;">${reservation.reservationDate.split(' ')[0]}</td>
-						<td style="vertical-align: middle;">${statusLabel}</td>
-						<td style="vertical-align: middle;">${reservation.seatClass}</td>
-						<td style="vertical-align: middle;">${reservation.passengerCount}명</td>
-						<td style="vertical-align: middle;">${formattedAmount}</td>
-						<td style="vertical-align: middle;">
-							<button class="btn btn-info btn-xs" onclick="showReservationDetail('${reservation.reservationId}')">
-								<i class="fa fa-eye"></i> 상세
-							</button>
-						</td>
-					</tr>
-				`);
-			});
-
-			// 페이지네이션 업데이트
-			updatePagination(reservations.length);
-		}
 
 		// 서버 데이터 출력 함수 (서버에서 이미 페이지네이션 처리됨)
 		function displayServerReservations(reservations) {
 			const tbody = $('#reservationTableBody');
 			tbody.empty();
 
-			if (reservations.length === 0) {
+			if (!reservations || reservations.length === 0) {
 				tbody.append(`
 					<tr>
 						<td colspan="13" class="text-center">
@@ -524,25 +355,28 @@ String contextPath = request.getContextPath();
 			}
 
 			reservations.forEach(reservation => {
+				// null/undefined 값 안전 처리 - null 값은 그대로 표시
 				const statusLabel = getStatusLabel(reservation.status);
-				const formattedAmount = formatCurrency(reservation.totalAmount);
+				const formattedAmount = reservation.totalAmount != null ? formatCurrency(reservation.totalAmount) : null;
+				const departureDate = reservation.departureTime ? reservation.departureTime.split(' ')[0] : null;
+				const reservationDate = reservation.reservationDate ? reservation.reservationDate.split(' ')[0] : null;
 				
 				tbody.append(`
 					<tr>
-						<td style="vertical-align: middle;">${reservation.reservationId}</td>
-						<td style="vertical-align: middle;">${reservation.userName}</td>
-						<td style="vertical-align: middle;">${reservation.userEmail}</td>
-						<td style="vertical-align: middle;">${reservation.userPhone}</td>
-						<td style="vertical-align: middle;">${reservation.departure}</td>
-						<td style="vertical-align: middle;">${reservation.arrival}</td>
-						<td style="vertical-align: middle;">${reservation.departureTime.split(' ')[0]}</td>
-						<td style="vertical-align: middle;">${reservation.reservationDate.split(' ')[0]}</td>
-						<td style="vertical-align: middle;">${statusLabel}</td>
-						<td style="vertical-align: middle;">${reservation.seatClass}</td>
-						<td style="vertical-align: middle;">${reservation.passengerCount}명</td>
-						<td style="vertical-align: middle;">${formattedAmount}</td>
+						<td style="vertical-align: middle;">\${reservation.reservationId || null}</td>
+						<td style="vertical-align: middle;">\${reservation.userName || null}</td>
+						<td style="vertical-align: middle;">\${reservation.userEmail || null}</td>
+						<td style="vertical-align: middle;">\${reservation.userPhone || null}</td>
+						<td style="vertical-align: middle;">\${reservation.departure || null}</td>
+						<td style="vertical-align: middle;">\${reservation.arrival || null}</td>
+						<td style="vertical-align: middle;">\${departureDate || null}</td>
+						<td style="vertical-align: middle;">\${reservationDate || null}</td>
+						<td style="vertical-align: middle;">\${statusLabel}</td>
+						<td style="vertical-align: middle;">\${reservation.seatClass || null}</td>
+						<td style="vertical-align: middle;">\${reservation.passengerCount != null ? reservation.passengerCount + '명' : null}</td>
+						<td style="vertical-align: middle;">\${formattedAmount || null}</td>
 						<td style="vertical-align: middle;">
-							<button class="btn btn-info btn-xs" onclick="showReservationDetail('${reservation.reservationId}')">
+							<button class="btn btn-info btn-xs" onclick="showReservationDetail('\${reservation.reservationId || ''}')">
 								<i class="fa fa-eye"></i> 상세
 							</button>
 						</td>
@@ -553,17 +387,27 @@ String contextPath = request.getContextPath();
 
 		// 상태에 따른 라벨 생성
 		function getStatusLabel(status) {
+			// null이나 undefined인 경우 null 반환
+			if (status == null || status === '') {
+				return null;
+			}
+			
 			const statusMap = {
 				'confirmed': '<span class="label label-success">확정</span>',
 				'pending': '<span class="label label-warning">대기</span>',
 				'cancelled': '<span class="label label-danger">취소</span>',
-				'completed': '<span class="label label-info">완료</span>'
+				'completed': '<span class="label label-info">완료</span>',
+				'unknown': '<span class="label label-default">알 수 없음</span>'
 			};
-			return statusMap[status] || '<span class="label label-default">알 수 없음</span>';
+			return statusMap[status] || null;
 		}
 
 		// 원화 포맷팅 함수
 		function formatCurrency(amount) {
+			// null이나 undefined인 경우 null 반환
+			if (amount == null) {
+				return null;
+			}
 			return new Intl.NumberFormat('ko-KR', {
 				style: 'currency',
 				currency: 'KRW'
@@ -575,295 +419,151 @@ String contextPath = request.getContextPath();
 			$('#resultCount').text(count);
 		}
 
-		// 페이지네이션 업데이트 (로컬 데이터용)
-		function updatePagination(totalItems) {
-			const totalPages = Math.ceil(totalItems / itemsPerPage);
-			const pagination = $('#searchPagination');
-			pagination.empty();
 
-			if (totalPages <= 1) return;
 
-			// 이전 버튼
-			if (currentPage > 1) {
-				pagination.append(`
-					<li>
-						<a href="#" onclick="changePage(${currentPage - 1})">
-							<i class="fa fa-chevron-left"></i>
-						</a>
-					</li>
-				`);
-			}
-
-			// 페이지 번호들
-			for (let i = 1; i <= totalPages; i++) {
-				const activeClass = i === currentPage ? 'active' : '';
-				pagination.append(`
-					<li class="${activeClass}">
-						<a href="#" onclick="changePage(${i})">${i}</a>
-					</li>
-				`);
-			}
-
-			// 다음 버튼
-			if (currentPage < totalPages) {
-				pagination.append(`
-					<li>
-						<a href="#" onclick="changePage(${currentPage + 1})">
-							<i class="fa fa-chevron-right"></i>
-						</a>
-					</li>
-				`);
-			}
-		}
-
-		// 페이지네이션 업데이트 (서버 데이터용)
-		function updatePaginationWithTotal(totalCount) {
-			const totalPages = Math.ceil(totalCount / itemsPerPage);
-			const pagination = $('#searchPagination');
-			pagination.empty();
-
-			if (totalPages <= 1) return;
-
-			// 이전 버튼
-			if (currentPage > 1) {
-				pagination.append(`
-					<li>
-						<a href="#" onclick="changePageAndSearch(${currentPage - 1})">
-							<i class="fa fa-chevron-left"></i>
-						</a>
-					</li>
-				`);
-			}
-
-			// 페이지 번호들 (최대 10개 페이지만 표시)
-			const startPage = Math.max(1, currentPage - 5);
-			const endPage = Math.min(totalPages, startPage + 9);
-
-			for (let i = startPage; i <= endPage; i++) {
-				const activeClass = i === currentPage ? 'active' : '';
-				pagination.append(`
-					<li class="${activeClass}">
-						<a href="#" onclick="changePageAndSearch(${i})">${i}</a>
-					</li>
-				`);
-			}
-
-			// 다음 버튼
-			if (currentPage < totalPages) {
-				pagination.append(`
-					<li>
-						<a href="#" onclick="changePageAndSearch(${currentPage + 1})">
-							<i class="fa fa-chevron-right"></i>
-						</a>
-					</li>
-				`);
-			}
-		}
-
-		// 페이지 변경 (로컬 데이터용)
-		window.changePage = function(page) {
-			currentPage = page;
-			displayReservations(currentReservations);
-		};
-
-		// 페이지 변경 후 검색 재실행 (서버 데이터용)
-		window.changePageAndSearch = function(page) {
-			currentPage = page;
-			
-			// 현재 검색 조건이 있으면 검색 재실행, 없으면 전체 목록 조회
-			const searchInput = $('#reservationSearchInput').val().trim();
-			const statusFilter = $('#reservationStatus').val();
-			
-			if (searchInput || statusFilter) {
-				searchReservations();
-			} else {
-				loadAllReservations();
-			}
-		};
-
-		// 예약 검색 함수
+		// 예약 검색 함수 (이름으로만 검색)
 		function searchReservations() {
-			const searchType = $('#searchType').val();
 			const searchInput = $('#reservationSearchInput').val().trim();
-			const statusFilter = $('#reservationStatus').val();
+
+			console.log('=== 이름 검색 시작 ===');
+			console.log('검색어:', searchInput);
 
 			// 검색 버튼 비활성화
 			$('#searchReservationBtn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> 검색중...');
 
 			// 요청 파라미터 구성
 			const params = new URLSearchParams();
-			params.append('searchType', searchType);
 			if (searchInput) {
 				params.append('searchKeyword', searchInput);
 			}
-			if (statusFilter) {
-				params.append('reservationStatus', statusFilter);
-			}
-			params.append('page', currentPage);
-			params.append('size', itemsPerPage);
 
-					// 서버에 검색 요청
-		fetch('${pageContext.request.contextPath}/flight/reservationsearch?' + params.toString(), {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-				'Accept': 'application/json'
-			}
-		})
-		.then(response => {
-			if (!response.ok) {
-				throw new Error('서버 응답 오류: ' + response.status);
-			}
-			return response.json();
-		})
-		.then(data => {
-			console.log('서버 응답:', data); // 디버깅용
-			if (data.success) {
-				// 서버에서 받은 데이터로 업데이트
-				const reservations = data.reservations || [];
-				const totalCount = data.totalCount || 0;
-				
-				// 서버에서 받은 데이터를 직접 테이블에 표시 (페이지네이션은 서버에서 처리됨)
-				displayServerReservations(reservations);
-				updateResultCount(totalCount);
-				updatePaginationWithTotal(totalCount);
+			const requestUrl = '${pageContext.request.contextPath}/flight/reservationsearch?' + params.toString();
+			console.log('요청 URL:', requestUrl);
 
-				// 검색 결과 메시지
-				if (reservations.length === 0) {
-					showNotification('검색 결과가 없습니다.', 'warning');
-				} else {
-					showNotification(`${totalCount}건의 검색 결과를 찾았습니다.`, 'success');
+			// 서버에 검색 요청
+			fetch(requestUrl, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					'Accept': 'application/json'
 				}
-			} else {
-				throw new Error(data.message || '검색 중 오류가 발생했습니다.');
-			}
-		})
-		.catch(error => {
-			console.error('검색 오류:', error);
-			showNotification('서버 연동 오류가 발생했습니다. 목 데이터로 대체합니다.', 'warning');
-			
-			// 오류 발생 시 목 데이터로 폴백
-			searchReservationsWithMockData();
-		})
+			})
+			.then(response => {
+				console.log('서버 응답 상태:', response.status);
+				if (!response.ok) {
+					throw new Error('서버 응답 오류: ' + response.status);
+				}
+				return response.json();
+			})
+			.then(data => {
+				console.log('서버 응답 데이터:', data);
+				if (data.success) {
+					const reservations = data.reservations || [];
+					const totalCount = data.totalCount || 0;
+					
+					console.log(`받은 데이터 - 총 ${totalCount}건`);
+					
+					// 검색 결과 표시
+					displayServerReservations(reservations);
+					updateResultCount(totalCount);
+
+					// 검색 결과 메시지
+					if (totalCount === 0) {
+						showNotification('검색 결과가 없습니다.', 'warning');
+					} else {
+						showNotification(`총 ${totalCount}건의 검색 결과를 찾았습니다.`, 'success');
+					}
+				} else {
+					console.error('서버 응답 오류:', data.message);
+					showNotification('검색 중 오류가 발생했습니다: ' + data.message, 'error');
+					displayServerReservations([]);
+					updateResultCount(0);
+				}
+			})
+			.catch(error => {
+				console.error('검색 오류:', error);
+				console.error('오류 상세:', error.message);
+				showNotification('서버 연동 오류가 발생했습니다: ' + error.message, 'error');
+				displayServerReservations([]);
+				updateResultCount(0);
+			})
 			.finally(() => {
 				// 검색 버튼 재활성화
 				$('#searchReservationBtn').prop('disabled', false).html('<i class="fa fa-search"></i> 검색');
 			});
 		}
 
-		// 목 데이터로 검색 (서버 연동 전 테스트용)
-		function searchReservationsWithMockData() {
-			const searchType = $('#searchType').val();
-			const searchInput = $('#reservationSearchInput').val().trim().toLowerCase();
-			const statusFilter = $('#reservationStatus').val();
 
-			let filteredReservations = mockReservations.filter(reservation => {
-				// 텍스트 검색 조건
-				let textMatch = true;
-				if (searchInput) {
-					switch (searchType) {
-						case 'reservationId':
-							textMatch = reservation.reservationId.toLowerCase().includes(searchInput);
-							break;
-						case 'userName':
-							textMatch = reservation.userName.toLowerCase().includes(searchInput);
-							break;
-						case 'userEmail':
-							textMatch = reservation.userEmail.toLowerCase().includes(searchInput);
-							break;
-						case 'phone':
-							textMatch = reservation.userPhone.includes(searchInput);
-							break;
-					}
-				}
 
-				// 상태 필터 조건
-				let statusMatch = true;
-				if (statusFilter) {
-					statusMatch = reservation.status === statusFilter;
-				}
-
-				return textMatch && statusMatch;
-			});
-
-			currentReservations = filteredReservations;
-			displayReservations(currentReservations);
-			updateResultCount(currentReservations.length);
-			updatePagination(currentReservations.length);
-		}
-
-		// 전체 예약 목록 조회
+		// 전체 예약 목록 조회 (단순화)
 		function loadAllReservations() {
 			// 검색 조건 초기화
-			$('#searchType').val('reservationId');
 			$('#reservationSearchInput').val('');
-			$('#reservationStatus').val('');
-			currentPage = 1;
+
+			console.log('=== 전체 목록 조회 시작 ===');
 
 			// 전체 조회 버튼 비활성화
 			$('#loadAllReservationsBtn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> 조회중...');
 
-					// 서버에 전체 목록 요청 (빈 검색 조건으로 전체 조회)
-		const params = new URLSearchParams();
-		params.append('searchType', 'reservationId');
-		params.append('page', currentPage);
-		params.append('size', itemsPerPage);
+			// 서버에 전체 목록 요청 (빈 검색 조건으로 전체 조회)
+			const requestUrl = '${pageContext.request.contextPath}/flight/reservationsearch';
+			console.log('전체 조회 URL:', requestUrl);
 
-		fetch('${pageContext.request.contextPath}/flight/reservationsearch?' + params.toString(), {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-				'Accept': 'application/json'
-			}
-		})
-		.then(response => {
-			if (!response.ok) {
-				throw new Error('서버 응답 오류: ' + response.status);
-			}
-			return response.json();
-		})
-		.then(data => {
-			console.log('전체 목록 서버 응답:', data); // 디버깅용
-			if (data.success) {
-				const reservations = data.reservations || [];
-				const totalCount = data.totalCount || 0;
-				
-				displayServerReservations(reservations);
-				updateResultCount(totalCount);
-				updatePaginationWithTotal(totalCount);
-				showNotification('전체 예약 목록을 조회했습니다.', 'info');
-			} else {
-				throw new Error(data.message || '목록 조회 중 오류가 발생했습니다.');
-			}
-		})
-		.catch(error => {
-			console.error('목록 조회 오류:', error);
-			showNotification('서버 연동 오류가 발생했습니다. 목 데이터로 대체합니다.', 'warning');
-			
-			// 오류 발생 시 목 데이터로 폴백
-			loadAllReservationsWithMockData();
-		})
+			fetch(requestUrl, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					'Accept': 'application/json'
+				}
+			})
+			.then(response => {
+				console.log('서버 응답 상태:', response.status);
+				if (!response.ok) {
+					throw new Error('서버 응답 오류: ' + response.status);
+				}
+				return response.json();
+			})
+			.then(data => {
+				console.log('전체 목록 서버 응답:', data);
+				if (data.success) {
+					const reservations = data.reservations || [];
+					const totalCount = data.totalCount || 0;
+					
+					console.log(`전체 목록 - 총 ${totalCount}건`);
+					
+					displayServerReservations(reservations);
+					updateResultCount(totalCount);
+					
+					if (totalCount === 0) {
+						showNotification('등록된 예약이 없습니다.', 'info');
+					} else {
+						showNotification(`전체 예약 목록을 조회했습니다. (총 ${totalCount}건)`, 'info');
+					}
+				} else {
+					console.error('전체 목록 조회 오류:', data.message);
+					showNotification('목록 조회 중 오류가 발생했습니다: ' + data.message, 'error');
+					displayServerReservations([]);
+					updateResultCount(0);
+				}
+			})
+			.catch(error => {
+				console.error('목록 조회 오류:', error);
+				console.error('오류 상세:', error.message);
+				showNotification('서버 연동 오류가 발생했습니다: ' + error.message, 'error');
+				displayServerReservations([]);
+				updateResultCount(0);
+			})
 			.finally(() => {
 				// 버튼 재활성화
 				$('#loadAllReservationsBtn').prop('disabled', false).html('<i class="fa fa-list"></i> 전체 예약 조회');
 			});
 		}
 
-		// 목 데이터로 전체 조회 (서버 연동 전 테스트용)
-		function loadAllReservationsWithMockData() {
-			currentReservations = [...mockReservations];
-			currentPage = 1;
-			displayReservations(currentReservations);
-			updateResultCount(currentReservations.length);
-			updatePagination(currentReservations.length);
-		}
+
 
 		// 검색 조건 초기화
 		function clearSearch() {
-			$('#searchType').val('reservationId');
 			$('#reservationSearchInput').val('');
-			$('#reservationStatus').val('');
-			currentPage = 1;
 			
 			// 서버에서 전체 목록 조회
 			loadAllReservations();
@@ -872,68 +572,63 @@ String contextPath = request.getContextPath();
 
 		// 예약 상세 정보 표시
 		window.showReservationDetail = function(reservationId) {
-			// 먼저 현재 화면에 표시된 데이터에서 찾기
+			// 현재 테이블에 표시된 데이터에서 찾기
 			let reservation = null;
 			
-			// 현재 테이블에 표시된 데이터에서 찾기
 			$('#reservationTableBody tr').each(function() {
 				const rowReservationId = $(this).find('td:first').text();
 				if (rowReservationId === reservationId) {
 					const cells = $(this).find('td');
 					reservation = {
-						reservationId: cells.eq(0).text(),
-						userName: cells.eq(1).text(),
-						userEmail: cells.eq(2).text(),
-						userPhone: cells.eq(3).text(),
-						departure: cells.eq(4).text(),
-						arrival: cells.eq(5).text(),
-						departureTime: cells.eq(6).text() + ' 00:00', // 시간 정보 추가
-						reservationDate: cells.eq(7).text() + ' 00:00', // 시간 정보 추가
-						status: $(cells.eq(8).find('span')).text().toLowerCase(),
-						seatClass: cells.eq(9).text(),
-						passengerCount: parseInt(cells.eq(10).text()),
-						totalAmount: cells.eq(11).text(),
-						// 기본값들
-						userBirth: '1990-01-01',
-						flightNumber: 'KE000',
-						arrivalTime: cells.eq(6).text() + ' 23:59'
+						reservationId: cells.eq(0).text() === 'null' ? null : cells.eq(0).text(),
+						userName: cells.eq(1).text() === 'null' ? null : cells.eq(1).text(),
+						userEmail: cells.eq(2).text() === 'null' ? null : cells.eq(2).text(),
+						userPhone: cells.eq(3).text() === 'null' ? null : cells.eq(3).text(),
+						departure: cells.eq(4).text() === 'null' ? null : cells.eq(4).text(),
+						arrival: cells.eq(5).text() === 'null' ? null : cells.eq(5).text(),
+						departureTime: cells.eq(6).text() === 'null' ? null : (cells.eq(6).text() ? cells.eq(6).text() + ' 00:00' : null),
+						reservationDate: cells.eq(7).text() === 'null' ? null : (cells.eq(7).text() ? cells.eq(7).text() + ' 00:00' : null),
+						status: $(cells.eq(8).find('span')).text() ? $(cells.eq(8).find('span')).text().toLowerCase() : null,
+						seatClass: cells.eq(9).text() === 'null' ? null : cells.eq(9).text(),
+						passengerCount: cells.eq(10).text() === 'null' ? null : parseInt(cells.eq(10).text()),
+						totalAmount: cells.eq(11).text() === 'null' ? null : cells.eq(11).text(),
+						userBirth: null,
+						flightNumber: null,
+						arrivalTime: cells.eq(6).text() === 'null' ? null : (cells.eq(6).text() ? cells.eq(6).text() + ' 23:59' : null)
 					};
 					return false; // break
 				}
 			});
-			
-			// 테이블에서 찾지 못했으면 목 데이터에서 찾기
-			if (!reservation) {
-				reservation = mockReservations.find(r => r.reservationId === reservationId);
-			}
 			
 			if (!reservation) {
 				showNotification('예약 정보를 찾을 수 없습니다.', 'error');
 				return;
 			}
 
-			// 모달에 데이터 채우기
-			$('#modalReservationId').text(reservation.reservationId);
-			$('#modalReservationDate').text(reservation.reservationDate);
-			$('#modalReservationStatus').html(getStatusLabel(reservation.status));
-			// 금액이 문자열일 경우 숫자로 변환 후 포맷팅
-			const totalAmount = typeof reservation.totalAmount === 'string' 
-				? parseFloat(reservation.totalAmount.replace(/[^\d]/g, '')) 
-				: reservation.totalAmount;
-			$('#modalTotalAmount').text(formatCurrency(totalAmount));
+			// 모달에 데이터 채우기 - null 값은 그대로 표시
+			$('#modalReservationId').text(reservation.reservationId || null);
+			$('#modalReservationDate').text(reservation.reservationDate || null);
+			$('#modalReservationStatus').html(getStatusLabel(reservation.status) || null);
 			
-			$('#modalUserName').text(reservation.userName);
-			$('#modalUserEmail').text(reservation.userEmail);
-			$('#modalUserPhone').text(reservation.userPhone);
-			$('#modalUserBirth').text(reservation.userBirth);
+			const totalAmount = reservation.totalAmount != null 
+				? (typeof reservation.totalAmount === 'string' 
+					? parseFloat(reservation.totalAmount.replace(/[^\d]/g, '')) 
+					: reservation.totalAmount)
+				: null;
+			$('#modalTotalAmount').text(totalAmount != null ? formatCurrency(totalAmount) : null);
 			
-			$('#modalFlightNumber').text(reservation.flightNumber);
-			$('#modalDeparture').text(reservation.departure);
-			$('#modalArrival').text(reservation.arrival);
-			$('#modalDepartureTime').text(reservation.departureTime);
-			$('#modalArrivalTime').text(reservation.arrivalTime);
-			$('#modalSeatClass').text(reservation.seatClass);
-			$('#modalPassengerCount').text(reservation.passengerCount + '명');
+			$('#modalUserName').text(reservation.userName || null);
+			$('#modalUserEmail').text(reservation.userEmail || null);
+			$('#modalUserPhone').text(reservation.userPhone || null);
+			$('#modalUserBirth').text(reservation.userBirth || null);
+			
+			$('#modalFlightNumber').text(reservation.flightNumber || null);
+			$('#modalDeparture').text(reservation.departure || null);
+			$('#modalArrival').text(reservation.arrival || null);
+			$('#modalDepartureTime').text(reservation.departureTime || null);
+			$('#modalArrivalTime').text(reservation.arrivalTime || null);
+			$('#modalSeatClass').text(reservation.seatClass || null);
+			$('#modalPassengerCount').text(reservation.passengerCount != null ? reservation.passengerCount + '명' : null);
 
 			// 삭제 버튼에 예약 ID 저장
 			$('#deleteReservationBtn').data('reservation-id', reservationId);
@@ -942,37 +637,21 @@ String contextPath = request.getContextPath();
 			$('#reservationDetailModal').modal('show');
 		};
 
-		// 예약 삭제 확인 모달 표시
+		// 예약 삭제 확인 모달 표시 (단순화)
 		function showDeleteConfirm(reservationId) {
-			const reservation = mockReservations.find(r => r.reservationId === reservationId);
-			if (!reservation) return;
-
-			$('#deleteReservationId').text(reservation.reservationId);
-			$('#deleteReservationUser').text(reservation.userName);
+			$('#deleteReservationId').text(reservationId || null);
+			$('#deleteReservationUser').text('선택된 예약');
 			$('#confirmDeleteBtn').data('reservation-id', reservationId);
 
 			$('#reservationDetailModal').modal('hide');
 			$('#deleteConfirmModal').modal('show');
 		}
 
-		// 예약 삭제 실행
+		// 예약 삭제 실행 (단순화)
 		function deleteReservation(reservationId) {
-			const index = mockReservations.findIndex(r => r.reservationId === reservationId);
-			if (index !== -1) {
-				mockReservations.splice(index, 1);
-				
-				// 현재 검색 결과에서도 제거
-				const currentIndex = currentReservations.findIndex(r => r.reservationId === reservationId);
-				if (currentIndex !== -1) {
-					currentReservations.splice(currentIndex, 1);
-				}
-
-				displayReservations(currentReservations);
-				updateResultCount(currentReservations.length);
-				
-				$('#deleteConfirmModal').modal('hide');
-				showNotification('예약이 성공적으로 삭제되었습니다.', 'success');
-			}
+			// 실제 서버 삭제 요청 구현 예정
+			$('#deleteConfirmModal').modal('hide');
+			showNotification('예약 삭제 기능은 추후 구현 예정입니다.', 'info');
 		}
 
 		// 알림 메시지 표시
@@ -1003,7 +682,6 @@ String contextPath = request.getContextPath();
 
 		// 이벤트 리스너 등록
 		$('#searchReservationBtn').click(function() {
-			currentPage = 1; // 새 검색 시 첫 페이지로 이동
 			searchReservations();
 		});
 		$('#clearSearchBtn').click(clearSearch);
@@ -1012,15 +690,6 @@ String contextPath = request.getContextPath();
 		// Enter 키로 검색
 		$('#reservationSearchInput').keypress(function(e) {
 			if (e.which === 13) {
-				currentPage = 1; // 새 검색 시 첫 페이지로 이동
-				searchReservations();
-			}
-		});
-
-		// 상태 필터 변경 시 자동 검색
-		$('#reservationStatus').change(function() {
-			if ($('#reservationSearchInput').val().trim() || $(this).val()) {
-				currentPage = 1; // 필터 변경 시 첫 페이지로 이동
 				searchReservations();
 			}
 		});

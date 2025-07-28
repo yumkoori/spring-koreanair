@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="org.doit.admin.mapper.ReservationSearchMapper">
+    
+<select id="reservationSearch" resultType="org.doit.admin.dto.ReservationSearchDTO">
+SELECT 
+    b.booking_id AS bookingId,
+    u.korean_name AS userName,
+    u.email AS email,
+    u.phone AS phone,
+    u.birth_date birthDate,
+    
+    da.airport_name AS start,
+    aa.airport_name AS end,
+    f.arrival_time AS startDate,
+    
+    bs.booking_completed_at AS expireTime,
+   
+    fs.class_id AS seatClass,
+    sp.price AS totalPrice
+
+FROM 
+    booking b
+ JOIN users u ON b.user_no = u.user_no
+ JOIN flight f ON b.outbound_flight_id = f.flight_id
+ JOIN airport da ON f.departure_airport_id = da.airport_id
+ JOIN airport aa ON f.arrival_airport_id = aa.airport_id
+ JOIN booking_status bs ON b.booking_id = bs.booking_id
+ JOIN booking_seat bseat ON b.booking_id = bseat.booking_id
+ JOIN flight_seat fs ON bseat.flight_seat_id = fs.seat_id
+                
+ JOIN seat_price sp ON fs.class_id = sp.class_id
+                   AND f.flight_id = sp.flight_id
+  where u.korean_name = #{searchKeyword}
+</select>
+
+</mapper> 
+
+
